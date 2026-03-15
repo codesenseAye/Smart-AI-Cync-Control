@@ -29,8 +29,8 @@ Intent types:
 - "simple": any description of light quality — color, brightness, temperature, mood, atmosphere, or complaint about current lighting
 - "effect": user mentions one of the factory effect names listed above (candle, cyber, rainbow, etc.)
 - "complex": describes a repeating animation or light pattern
-- "save": user wants to save current state (e.g. "save as ...", "save ... as ...")
-- "recall": user says a known saved shortcut name
+- "save": user wants to save current state. Any word after "save" (that isn't a room name or "as"/"this") is the save_name. E.g. "save X" → save_name "X", "save as X" → save_name "X", "save room as X" → save_name "X"
+- "recall": user wants to load/recall/restore a saved shortcut. Trigger words: "recall", "load", "restore". Also triggered if the input matches a known saved shortcut name exactly
 - "schedule": command includes a time or recurrence (e.g. "at 7am", "at midnight", "every day")
 
 Classification guidance:
@@ -56,6 +56,11 @@ Examples:
 "left lamp red" → {"intent":"simple","room_mention":null,"device_mention":"left lamp","power_state":null,"time_mention":null,"days_mention":null,"save_name":null,"raw_description":null}
 "rainbow" → {"intent":"effect","room_mention":null,"device_mention":null,"power_state":null,"time_mention":null,"days_mention":null,"save_name":null,"raw_description":null}
 "red slow flash" → {"intent":"complex","room_mention":null,"device_mention":null,"power_state":null,"time_mention":null,"days_mention":null,"save_name":null,"raw_description":"red slow flash"}
+"save chill" → {"intent":"save","room_mention":null,"device_mention":null,"power_state":null,"time_mention":null,"days_mention":null,"save_name":"chill","raw_description":null}
+"save bedroom as relax" → {"intent":"save","room_mention":"bedroom","device_mention":null,"power_state":null,"time_mention":null,"days_mention":null,"save_name":"relax","raw_description":null}
+"chill" → {"intent":"recall","room_mention":null,"device_mention":null,"power_state":null,"time_mention":null,"days_mention":null,"save_name":"chill","raw_description":null}
+"recall relax" → {"intent":"recall","room_mention":null,"device_mention":null,"power_state":null,"time_mention":null,"days_mention":null,"save_name":"relax","raw_description":null}
+"load movie" → {"intent":"recall","room_mention":null,"device_mention":null,"power_state":null,"time_mention":null,"days_mention":null,"save_name":"movie","raw_description":null}
 "bedroom off at 11pm daily" → {"intent":"schedule","room_mention":"bedroom","device_mention":null,"power_state":"off","time_mention":"11pm","days_mention":"daily","save_name":null,"raw_description":null}`;
 }
 

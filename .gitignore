@@ -9,6 +9,10 @@ src/data/state.db-shm
 .env
 .claude/settings.local.json
 
+# Private config (contains home IDs, device IDs, access keys, MAC addresses)
+src/data/rooms.json
+cync_mesh.yaml
+
 # Electron app
 app/node_modules/
 app/dist/

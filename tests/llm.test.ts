@@ -85,6 +85,16 @@ const testCases: TestCase[] = [
   // --- Save ---
   { input: "save this as chill", assert: { type: "save", saveName: "chill" } },
   { input: "save bedroom as relax", assert: { type: "save", saveName: "relax", room: "bedroom" } },
+  { input: "save scp", assert: { type: "save", saveName: "scp" } },
+  { input: "save as movie", assert: { type: "save", saveName: "movie" } },
+  { input: "save bathroom as spa", assert: { type: "save", saveName: "spa", room: "bathroom" } },
+  { input: "save this as night mode", assert: { type: "save", saveName: "night mode" } },
+
+  // --- Recall ---
+  { input: "recall chill", assert: { type: "recall", recallName: "chill" } },
+  { input: "load relax", assert: { type: "recall", recallName: "relax" } },
+  { input: "recall scp", assert: { type: "recall", recallName: "scp" } },
+  { input: "load movie", assert: { type: "recall", recallName: "movie" } },
 
   // --- Schedule ---
   { input: "bedroom off at 11pm every day", assert: { type: "schedule", room: "bedroom", scheduleTimeHour: 23 } },

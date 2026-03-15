@@ -144,6 +144,29 @@ function resolveRoomFromText(rawText: string): string {
   return "all";
 }
 
+// --- Save/Recall Name Fallback from Raw Text ---
+
+const SAVE_NOISE = new Set(["save", "as", "this", "it", "the", "my", "current", "lights"]);
+const RECALL_NOISE = new Set(["recall", "load", "restore", "set", "to", "it", "the", "my"]);
+
+function extractSaveName(rawText: string): string | null {
+  const words = rawText.toLowerCase().trim().split(/\s+/).filter((w) => !SAVE_NOISE.has(w));
+  // Remove room names/aliases
+  const filtered = words.filter((w) => {
+    if (config.rooms.rooms[w]) return false;
+    for (const room of Object.values(config.rooms.rooms)) {
+      if (room.aliases.some((a) => a.toLowerCase() === w)) return false;
+    }
+    return true;
+  });
+  return filtered.length > 0 ? filtered.join(" ") : null;
+}
+
+function extractRecallName(rawText: string): string | null {
+  const words = rawText.toLowerCase().trim().split(/\s+/).filter((w) => !RECALL_NOISE.has(w));
+  return words.length > 0 ? words.join(" ") : null;
+}
+
 // --- Main Resolver ---
 
 export function resolveCommand(
@@ -248,7 +271,7 @@ export function resolveCommand(
     case "save": {
       return {
         type: "save",
-        name: intent.save_name ?? "unnamed",
+        name: intent.save_name ?? extractSaveName(rawText) ?? "unnamed",
         room,
         ...(device_ids && { device_ids }),
       };
@@ -257,7 +280,7 @@ export function resolveCommand(
     case "recall": {
       return {
         type: "recall",
-        name: intent.save_name ?? "unnamed",
+        name: intent.save_name ?? extractRecallName(rawText) ?? "unnamed",
       };
     }
 
