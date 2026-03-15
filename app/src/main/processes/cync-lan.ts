@@ -1,7 +1,7 @@
 import { spawn, execSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
-import { resolve } from "node:path";
 import { ManagedService, ServiceStatus } from "../types";
+import { DATA_PATHS } from "../data-dir";
 
 const CONTAINER_NAME = "cync-lan";
 const START_TIMEOUT_MS = 60_000;
@@ -11,10 +11,10 @@ export class CyncLanService implements ManagedService {
   private _status: ServiceStatus = "stopped";
   private _listener?: (status: ServiceStatus, detail?: string) => void;
   private pollTimer?: ReturnType<typeof setInterval>;
-  private projectRoot: string;
+  private configEnv: Record<string, string>;
 
-  constructor(projectRoot: string) {
-    this.projectRoot = projectRoot;
+  constructor(configEnv: Record<string, string>) {
+    this.configEnv = configEnv;
   }
 
   status(): ServiceStatus {
@@ -30,25 +30,10 @@ export class CyncLanService implements ManagedService {
     this._listener?.(s, detail);
   }
 
-  private get composeFile(): string {
-    return resolve(this.projectRoot, "cync-lan", "docker", "docker-compose.yaml");
-  }
-
-  /** Read project .env and build env overrides for docker compose */
+  /** Build env overrides for docker compose from config.env vars */
   private buildComposeEnv(): Record<string, string> {
-    const env: Record<string, string> = { ...process.env as Record<string, string> };
-    const envFile = resolve(this.projectRoot, ".env");
-
-    if (!existsSync(envFile)) return env;
-
-    const vars: Record<string, string> = {};
-    for (const line of readFileSync(envFile, "utf-8").split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) continue;
-      const eqIdx = trimmed.indexOf("=");
-      if (eqIdx === -1) continue;
-      vars[trimmed.slice(0, eqIdx).trim()] = trimmed.slice(eqIdx + 1).trim();
-    }
+    const env: Record<string, string> = { ...(process.env as Record<string, string>) };
+    const vars = this.configEnv;
 
     const mqttHost = vars.MQTT_BROKER_URL?.replace(/^mqtt:\/\//, "").replace(/:\d+$/, "") || "homeassistant.local";
     const mqttPortMatch = vars.MQTT_BROKER_URL?.match(/:(\d+)$/);
@@ -78,11 +63,12 @@ export class CyncLanService implements ManagedService {
     this.setStatus("starting", "Starting cync-lan container...");
 
     const composeEnv = this.buildComposeEnv();
+    const composeFile = DATA_PATHS.dockerCompose;
 
     return new Promise<void>((resolve, reject) => {
       const child = spawn(
         "docker",
-        ["compose", "-f", this.composeFile, "up", "-d"],
+        ["compose", "-f", composeFile, "up", "-d"],
         {
           env: composeEnv,
           stdio: ["ignore", "pipe", "pipe"],
@@ -122,11 +108,12 @@ export class CyncLanService implements ManagedService {
     }
 
     this.setStatus("stopping", "Stopping cync-lan container...");
+    const composeFile = DATA_PATHS.dockerCompose;
 
     return new Promise<void>((resolve) => {
       const child = spawn(
         "docker",
-        ["compose", "-f", this.composeFile, "down"],
+        ["compose", "-f", composeFile, "down"],
         {
           stdio: "ignore",
         },

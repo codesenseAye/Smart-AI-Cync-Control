@@ -49,7 +49,7 @@ async function start() {
   console.log("[boot] Starting smart-ai-cync-control server...");
 
   // 1. SQLite
-  const dbPath = join(__dirname, "..", "src", "data", "state.db");
+  const dbPath = process.env.DB_PATH || join(__dirname, "..", "src", "data", "state.db");
   const db = new Database(dbPath);
   db.pragma("journal_mode = WAL");
   console.log(`[boot] SQLite database at ${dbPath}`);

@@ -16,12 +16,12 @@ function env(key: string, fallback?: string): string {
 }
 
 function loadRoomsConfig(): RoomsConfig {
-  const path = join(__dirname, "..", "src", "data", "rooms.json");
+  const roomsPath = process.env.ROOMS_JSON_PATH || join(__dirname, "..", "src", "data", "rooms.json");
   try {
-    const raw = readFileSync(path, "utf-8");
+    const raw = readFileSync(roomsPath, "utf-8");
     return JSON.parse(raw) as RoomsConfig;
   } catch (e) {
-    console.error(`Failed to load rooms.json from ${path}:`, e);
+    console.error(`Failed to load rooms.json from ${roomsPath}:`, e);
     process.exit(1);
   }
 }

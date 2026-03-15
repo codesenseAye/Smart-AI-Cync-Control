@@ -16,9 +16,14 @@ export class ServiceManager {
 
   constructor(config: AppConfig) {
     this.hass = new HassVmService();
-    this.cyncLan = new CyncLanService(config.projectRoot);
+    this.cyncLan = new CyncLanService(config.env);
     this.lmStudio = new LmStudioService();
-    this.wrapperServer = new WrapperServerService(config.projectRoot, config.port);
+    this.wrapperServer = new WrapperServerService(
+      config.port,
+      config.dataDir,
+      config.env,
+      config.devProjectRoot,
+    );
 
     // Wire status change events to renderer
     const services = [this.hass, this.cyncLan, this.lmStudio, this.wrapperServer];

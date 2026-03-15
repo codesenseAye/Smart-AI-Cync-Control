@@ -15,7 +15,7 @@ set CSC_IDENTITY_AUTO_DISCOVERY=false
 set CACHE_DIR=%LOCALAPPDATA%\electron-builder\Cache\winCodeSign\winCodeSign-2.6.0
 set SEVEN_ZIP=%~dp0node_modules\7zip-bin\win\x64\7za.exe
 if not exist "%CACHE_DIR%\rcedit-x64.exe" (
-    echo [0/3] Setting up winCodeSign cache...
+    echo [0/5] Setting up winCodeSign cache...
     if exist "%LOCALAPPDATA%\electron-builder\Cache\winCodeSign" (
         rmdir /s /q "%LOCALAPPDATA%\electron-builder\Cache\winCodeSign"
     )
@@ -30,7 +30,7 @@ if not exist "%CACHE_DIR%\rcedit-x64.exe" (
     )
 )
 
-echo [1/3] Installing dependencies...
+echo [1/5] Installing dependencies...
 call npm install
 if %ERRORLEVEL% neq 0 (
     echo FAILED: npm install
@@ -39,16 +39,36 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo.
-echo [2/3] Compiling TypeScript...
+echo [2/5] Compiling server TypeScript...
+cd /d "%~dp0.."
 call npm run build
 if %ERRORLEVEL% neq 0 (
-    echo FAILED: TypeScript build
+    echo FAILED: Server TypeScript build
+    pause
+    exit /b 1
+)
+cd /d "%~dp0"
+
+echo.
+echo [3/5] Compiling Electron TypeScript...
+call npm run build
+if %ERRORLEVEL% neq 0 (
+    echo FAILED: Electron TypeScript build
     pause
     exit /b 1
 )
 
 echo.
-echo [3/3] Packaging exe...
+echo [4/5] Bundling server for distribution...
+call npm run build:server
+if %ERRORLEVEL% neq 0 (
+    echo FAILED: Server bundle
+    pause
+    exit /b 1
+)
+
+echo.
+echo [5/5] Packaging exe...
 call npx electron-builder --win --publish never
 if %ERRORLEVEL% neq 0 (
     echo FAILED: electron-builder
@@ -60,5 +80,9 @@ echo.
 echo ========================================
 echo  Build complete!
 echo  Output: app\release\Smart AI Cync Control.exe
+echo ========================================
+echo.
+echo  User data will be stored in:
+echo  %%LOCALAPPDATA%%\Smart AI Cync Control\
 echo ========================================
 pause

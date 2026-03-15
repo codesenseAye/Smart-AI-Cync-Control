@@ -7,11 +7,12 @@
   "main": "dist/main/main.js",
   "scripts": {
     "build": "tsc && node scripts/copy-static.js",
+    "build:server": "node scripts/bundle-server.js",
     "dev": "npm run build && electron .",
     "start": "electron .",
     "watch": "tsc -w",
-    "pack": "npm run build && electron-builder --dir",
-    "release": "npm run build && electron-builder"
+    "pack": "npm run build && npm run build:server && electron-builder --dir",
+    "release": "npm run build && npm run build:server && electron-builder"
   },
   "build": {
     "appId": "com.smartcync.control",
@@ -23,6 +24,12 @@
       "dist/**/*",
       "assets/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "dist/server",
+        "to": "server"
+      }
+    ],
     "win": {
       "target": "portable",
       "icon": "assets/smart-cync-ai-control-logo.png"
@@ -33,6 +40,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
+    "esbuild": "^0.25.0",
     "electron": "^35.0.0",
     "electron-builder": "^26.0.0",
     "typescript": "^5.8.3"

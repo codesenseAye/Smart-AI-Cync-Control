@@ -1,10 +1,14 @@
-import { app, BrowserWindow, nativeImage } from "electron";
+import { app, BrowserWindow, nativeImage, dialog } from "electron";
 import path from "node:path";
+import { ensureDataDir, DATA_DIR } from "./data-dir";
 import { loadConfig } from "./env-loader";
 import { ServiceManager } from "./services";
 import { registerIpcHandlers } from "./ipc-handlers";
 
 const APP_TITLE = "Smart AI Cync Control";
+
+// Initialize data directory before anything else
+const { firstRun } = ensureDataDir();
 
 const config = loadConfig();
 const services = new ServiceManager(config);
@@ -45,6 +49,17 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   createWindow();
   registerIpcHandlers(services, config);
+
+  // On first run, tell the user where to configure the app
+  if (firstRun) {
+    dialog.showMessageBox(mainWindow!, {
+      type: "info",
+      title: "First Run Setup",
+      message: "Welcome! Your configuration files have been created at:",
+      detail: `${DATA_DIR}\n\nPlease edit config.env (set your API_KEY) and rooms.json before using the app.`,
+      buttons: ["OK"],
+    });
+  }
 
   // Start all services after window is ready
   services.startAll().catch((err) => {
