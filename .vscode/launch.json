@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Electron App",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/app/node_modules/.bin/electron",
+      "args": ["${workspaceFolder}/app"],
+      "cwd": "${workspaceFolder}/app",
+      "preLaunchTask": "app:build",
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/app/dist/**/*.js"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Server (dev)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "watch", "src/index.ts"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "sourceMaps": true
+    },
+    {
+      "name": "Test: LLM",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "--test", "tests/llm.test.ts"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "sourceMaps": true
+    }
+  ]
+}

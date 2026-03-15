@@ -1,0 +1,15 @@
+node_modules/
+dist/
+src/data/state.db
+src/data/state.db-wal
+src/data/state.db-shm
+*.db
+*.db-wal
+*.db-shm
+.env
+.claude/settings.local.json
+
+# Electron app
+app/node_modules/
+app/dist/
+app/release/

@@ -1,0 +1,40 @@
+{
+  "name": "smart-ai-cync-control-app",
+  "version": "1.0.0",
+  "description": "Voice-controlled smart light manager",
+  "author": "Daniel W",
+  "private": true,
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build": "tsc && node scripts/copy-static.js",
+    "dev": "npm run build && electron .",
+    "start": "electron .",
+    "watch": "tsc -w",
+    "pack": "npm run build && electron-builder --dir",
+    "release": "npm run build && electron-builder"
+  },
+  "build": {
+    "appId": "com.smartcync.control",
+    "productName": "Smart AI Cync Control",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "assets/smart-cync-ai-control-logo.png"
+    },
+    "portable": {
+      "artifactName": "${productName}.exe"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "electron": "^35.0.0",
+    "electron-builder": "^26.0.0",
+    "typescript": "^5.8.3"
+  }
+}

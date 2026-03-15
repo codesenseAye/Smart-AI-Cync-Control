@@ -1,0 +1,38 @@
+{
+  "type": "module",
+  "name": "smart-ai-cync-control",
+  "version": "1.0.0",
+  "description": "Voice-controlled TypeScript wrapper for cync-lan MQTT light control",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "scan-rooms": "tsx scripts/scan-rooms.ts",
+    "scan-rooms:auto": "tsx scripts/scan-rooms.ts --auto",
+    "scan-rooms:list": "tsx scripts/scan-rooms.ts --list",
+    "export-cync": "tsx scripts/export-cync.ts",
+    "test:llm": "tsx --test tests/llm.test.ts",
+    "app:dev": "cd app && npm run dev",
+    "app:build": "cd app && npm run build",
+    "app:start": "cd app && npm run start"
+  },
+  "dependencies": {
+    "@lmstudio/sdk": "^1.5.0",
+    "better-sqlite3": "^11.7.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mqtt": "^4.3.8",
+    "node-cron": "^3.0.3",
+    "yaml": "^2.8.2",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.15.3",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

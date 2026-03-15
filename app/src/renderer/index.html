@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+  <title>Smart AI Cync Control</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Services -->
+    <section class="services">
+      <h2>Services</h2>
+      <div class="service-list">
+        <div class="service-row" data-service="HASS VM">
+          <span class="status-dot stopped"></span>
+          <span class="service-name">HASS</span>
+          <span class="service-detail">stopped</span>
+        </div>
+        <div class="service-row" data-service="cync-lan">
+          <span class="status-dot stopped"></span>
+          <span class="service-name">Lan</span>
+          <span class="service-detail">stopped</span>
+        </div>
+        <div class="service-row" data-service="LM Studio">
+          <span class="status-dot stopped"></span>
+          <span class="service-name">AI</span>
+          <span class="service-detail">stopped</span>
+        </div>
+        <div class="service-row" data-service="Wrapper Server">
+          <span class="status-dot stopped"></span>
+          <span class="service-name">Host</span>
+          <span class="service-detail">stopped</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Command Input -->
+    <section class="command-section">
+      <h2>Command</h2>
+      <div class="command-input-row">
+        <input type="text" id="command-input" placeholder='e.g. "kitchen warm dim"' autocomplete="off">
+        <button id="send-btn">Send</button>
+      </div>
+      <div id="command-result" class="command-result hidden"></div>
+    </section>
+
+    <!-- Server Logs -->
+    <section class="logs-section">
+      <h2>Server Logs</h2>
+      <pre id="log-output"></pre>
+    </section>
+  </div>
+
+  <script>var exports = {};</script>
+  <script src="renderer.js"></script>
+</body>
+</html>
