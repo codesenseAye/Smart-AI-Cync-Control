@@ -1,5 +1,5 @@
 import { app } from "electron";
-import { existsSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, readFileSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 
 /**
@@ -14,9 +14,6 @@ export const DATA_PATHS = {
   configEnv: join(DATA_DIR, "config.env"),
   roomsJson: join(DATA_DIR, "rooms.json"),
   stateDb: join(DATA_DIR, "state.db"),
-  cyncLanDir: join(DATA_DIR, "cync-lan"),
-  dockerCompose: join(DATA_DIR, "cync-lan", "docker-compose.yaml"),
-  cyncLanConfig: join(DATA_DIR, "cync-lan", "config"),
 } as const;
 
 /** Directory containing configs bundled at build time (inside extraResources) */
@@ -32,8 +29,6 @@ export function ensureDataDir(): { firstRun: boolean } {
   const firstRun = !existsSync(DATA_DIR);
 
   mkdirSync(DATA_DIR, { recursive: true });
-  mkdirSync(DATA_PATHS.cyncLanDir, { recursive: true });
-  mkdirSync(DATA_PATHS.cyncLanConfig, { recursive: true });
 
   const defaults = getBundledDefaultsDir();
 
@@ -45,28 +40,7 @@ export function ensureDataDir(): { firstRun: boolean } {
     seedFile(join(defaults, "rooms.json"), DATA_PATHS.roomsJson, FALLBACK_ROOMS_JSON);
   }
 
-  if (!existsSync(DATA_PATHS.dockerCompose)) {
-    seedFile(join(defaults, "docker-compose.yaml"), DATA_PATHS.dockerCompose, FALLBACK_DOCKER_COMPOSE);
-  }
-
-  // Seed cync-lan config (cync_mesh.yaml) if the config dir is empty
-  seedCyncLanConfig(defaults);
-
   return { firstRun };
-}
-
-/** Copy bundled cync-lan config files (cync_mesh.yaml etc.) into the data dir config folder. */
-function seedCyncLanConfig(defaults: string): void {
-  const bundledConfigDir = join(defaults, "cync-lan-config");
-  if (!existsSync(bundledConfigDir)) return;
-
-  for (const entry of readdirSync(bundledConfigDir, { withFileTypes: true })) {
-    if (!entry.isFile()) continue;
-    const dest = join(DATA_PATHS.cyncLanConfig, entry.name);
-    if (!existsSync(dest)) {
-      copyFileSync(join(bundledConfigDir, entry.name), dest);
-    }
-  }
 }
 
 /** Copy the bundled default if it exists, otherwise write the fallback template. */
@@ -90,17 +64,17 @@ API_KEY=changeme
 # LIGHTS_PORT=3001
 
 # MQTT broker
-# MQTT_BROKER_URL=mqtt://homeassistant.local:1883
+# MQTT_BROKER_URL=mqtt://localhost:1883
 # MQTT_USERNAME=
 # MQTT_PASSWORD=
 
 # LLM model loaded in LM Studio
 # LLM_MODEL=google/gemma-3-4b
 
-# MQTT topic prefix (must match cync-lan config)
+# MQTT topic prefix
 # CYNC_MQTT_TOPIC=cync_lan
 
-# LAN IP for DNS override (machine running cync-lan)
+# LAN IP for DNS override (this machine)
 # CYNC_LAN_IP=
 
 # Technitium DNS Server
@@ -122,29 +96,3 @@ const FALLBACK_ROOMS_JSON = JSON.stringify(
   null,
   2,
 );
-
-const FALLBACK_DOCKER_COMPOSE = `services:
-  cync-lan:
-    container_name: cync-lan
-    image: baudneo/cync-lan:latest
-    restart: unless-stopped
-    ports:
-      - "23779:23779"
-      - "23778:23778"
-    volumes:
-      - ./config:/root/cync-lan/config
-    environment:
-      TZ: "America/Chicago"
-      CYNC_ENABLE_EXPORTER: "no"
-      CYNC_MQTT_HOST: "\${CYNC_MQTT_HOST:-homeassistant.local}"
-      CYNC_MQTT_PORT: "\${CYNC_MQTT_PORT:-1883}"
-      CYNC_MQTT_USER: "\${CYNC_MQTT_USER:-}"
-      CYNC_MQTT_PASS: "\${CYNC_MQTT_PASS:-}"
-      CYNC_TOPIC: "\${CYNC_TOPIC:-cync_lan}"
-    networks:
-      - cync-lan
-
-networks:
-  cync-lan:
-    driver: bridge
-`;

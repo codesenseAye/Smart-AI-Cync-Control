@@ -1,9 +1,9 @@
 import { Router, type Request, type Response } from "express";
 import { config } from "../config.js";
 import { mqttService } from "../services/mqtt.js";
-import { savesService } from "../services/saves.js";
-import { schedulerService } from "../services/scheduler.js";
 import { getActiveEffectCount } from "../services/effects.js";
+import { proxyService } from "../services/proxy.js";
+import { savesService } from "../services/saves.js";
 
 export const statusRouter = Router();
 
@@ -13,12 +13,19 @@ statusRouter.get("/status", (_req: Request, res: Response) => {
     states[id] = state;
   }
 
-  res.json({
+  const response: Record<string, unknown> = {
     mqtt_connected: mqttService.isConnected(),
     device_count: Object.keys(states).length,
     active_effects: getActiveEffectCount(),
     devices: states,
-  });
+  };
+
+  response.proxy = {
+    running: proxyService.running,
+    connections: proxyService.connectionCount,
+  };
+
+  res.json(response);
 });
 
 statusRouter.get("/devices", (_req: Request, res: Response) => {
@@ -39,11 +46,5 @@ statusRouter.get("/devices", (_req: Request, res: Response) => {
 });
 
 statusRouter.get("/saves", (_req: Request, res: Response) => {
-  const saves = savesService.listAll();
-  res.json({ saves });
-});
-
-statusRouter.get("/schedules", (_req: Request, res: Response) => {
-  const schedules = schedulerService.listAll();
-  res.json({ schedules });
+  res.json(savesService.listAll());
 });

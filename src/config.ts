@@ -31,7 +31,7 @@ export const config = Object.freeze({
   apiKey: env("API_KEY"),
 
   mqtt: {
-    brokerUrl: env("MQTT_BROKER_URL", "mqtt://homeassistant.local:1883"),
+    brokerUrl: env("MQTT_BROKER_URL", "mqtt://localhost:1883"),
     username: process.env.MQTT_USERNAME || undefined,
     password: process.env.MQTT_PASSWORD || undefined,
     topic: env("CYNC_MQTT_TOPIC", "cync_lan"),
@@ -50,6 +50,13 @@ export const config = Object.freeze({
     url: env("TECHNITIUM_URL", "http://localhost:5380"),
     username: env("TECHNITIUM_USERNAME", "admin"),
     password: env("TECHNITIUM_PASSWORD", "admin"),
+  },
+
+  proxy: {
+    port: parseInt(env("PROXY_PORT", "23779"), 10),
+    cloudDomain: env("PROXY_CLOUD_DOMAIN", "cm.gelighting.com"),
+    cloudPort: parseInt(env("PROXY_CLOUD_PORT", "23779"), 10),
+    dnsServer: env("PROXY_DNS_SERVER", "8.8.8.8"),
   },
 
   rooms: loadRoomsConfig(),

@@ -6,7 +6,6 @@ import type {
 import { mqttService } from "./mqtt.js";
 import { savesService } from "./saves.js";
 import { cancelDeviceEffects, runEffect } from "./effects.js";
-import { schedulerService } from "./scheduler.js";
 
 export async function execute(command: ParsedCommand): Promise<{ ok: boolean; detail: string }> {
   switch (command.type) {
@@ -34,21 +33,8 @@ export async function execute(command: ParsedCommand): Promise<{ ok: boolean; de
         command.device_ids
       );
 
-    case "save":
-      return executeSave(command.name, command.room, command.device_ids);
-
     case "recall":
       return executeRecall(command.name);
-
-    case "schedule":
-      return executeSchedule(
-        command.name,
-        command.room,
-        command.time,
-        command.days,
-        command.state,
-        command.device_ids
-      );
 
     default:
       return { ok: false, detail: `Unknown command type: ${(command as ParsedCommand).type}` };
@@ -168,14 +154,6 @@ function executeComplex(
   };
 }
 
-function executeSave(name: string, room: string, deviceIds?: number[]): { ok: boolean; detail: string } {
-  const saved = savesService.save(name, room, deviceIds);
-  return {
-    ok: true,
-    detail: `Saved "${name}" with ${saved.states.length} device states from "${room}"`,
-  };
-}
-
 function executeRecall(name: string): { ok: boolean; detail: string } {
   const saved = savesService.recall(name);
   if (!saved) {
@@ -212,17 +190,3 @@ function buildPayloadFromSavedState(s: SavedDeviceState): Record<string, unknown
   return payload;
 }
 
-function executeSchedule(
-  name: string,
-  room: string,
-  time: string,
-  days: string,
-  innerCommand: ParsedCommand,
-  _deviceIds?: number[]
-): { ok: boolean; detail: string } {
-  const schedule = schedulerService.create(name, room, time, days, innerCommand);
-  return {
-    ok: true,
-    detail: `Created schedule "${name}" (${schedule.cron}) for "${room}"`,
-  };
-}

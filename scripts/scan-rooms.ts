@@ -7,7 +7,7 @@
  * Usage:
  *   npx tsx scripts/scan-rooms.ts [path-to-cync_mesh.yaml]
  *
- * If no path is given, searches for cync_mesh.yaml in ./cync-lan/.
+ * If no path is given, searches for cync_mesh.yaml in the project root.
  *
  * Modes:
  *   --auto       Skip prompts, auto-group by device name prefix
@@ -90,8 +90,6 @@ function findMeshYaml(): string {
 
   // Search common locations
   const candidates = [
-    join(PROJECT_ROOT, "cync-lan", "cync_mesh.yaml"),
-    join(PROJECT_ROOT, "cync-lan", "cync_mesh_example.yaml"),
     join(PROJECT_ROOT, "cync_mesh.yaml"),
   ];
 

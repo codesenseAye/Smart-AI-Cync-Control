@@ -1,11 +1,11 @@
 ---
 name: dns
-description: Manage the DNS override that redirects Cync cloud domains to the local cync-lan server via Technitium DNS
+description: Manage the DNS override that redirects Cync cloud domains to the local proxy via Technitium DNS
 argument-hint: <enable|disable|status>
 disable-model-invocation: true
 ---
 
-Manage the DNS override for cync-lan using Technitium DNS Server. This creates/removes DNS zones in Technitium to redirect Cync cloud domains (`cm.gelighting.com`, `cm-sec.gelighting.com`, `cm-ge.xlink.cn`) to the local cync-lan server IP **network-wide**.
+Manage the DNS override using Technitium DNS Server. This creates/removes DNS zones in Technitium to redirect Cync cloud domains (`cm.gelighting.com`, `cm-sec.gelighting.com`, `cm-ge.xlink.cn`) to the local proxy IP **network-wide**.
 
 The argument is: $ARGUMENTS
 
@@ -31,7 +31,6 @@ Based on the argument:
 1. Authenticate with Technitium DNS API (same as enable).
 2. For each Cync domain, try to get zone records: `GET /api/zones/records/get?token=TOKEN&domain=DOMAIN&zone=DOMAIN`
 3. Report whether the override is active and show the current A record entries if so.
-4. Also check the legacy hosts file (`C:\Windows\System32\drivers\etc\hosts`) for any old `# >>> cync-lan DNS override` block and mention it if found.
 
 ## If no argument or unrecognized
 
@@ -41,5 +40,5 @@ Show usage: `/dns enable`, `/dns disable`, `/dns status`
 
 - Technitium DNS Server must be running locally (default: `http://localhost:5380`).
 - Credentials are in `.env` as `TECHNITIUM_USERNAME` and `TECHNITIUM_PASSWORD`.
-- This provides **network-wide** DNS override — all devices on the network using Technitium as their DNS server will resolve the Cync domains to the cync-lan IP.
+- This provides **network-wide** DNS override — all devices on the network using Technitium as their DNS server will resolve the Cync domains to the proxy IP.
 - If the Technitium API is unreachable, tell the user to ensure Technitium DNS Server is running.

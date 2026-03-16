@@ -17,9 +17,6 @@ interface Assertion {
   deviceIdsInclude?: number[];
   repeat?: boolean;
   transitionStyle?: "instant" | "fade";
-  scheduleDays?: string;
-  scheduleTimeHour?: number;
-  saveName?: string;
   recallName?: string;
 }
 
@@ -82,23 +79,11 @@ const testCases: TestCase[] = [
   { input: "blue fast flash in the bedroom", assert: { type: "complex", room: "bedroom", repeat: true } },
   { input: "green pulse", assert: { type: "complex", room: "all", repeat: true, transitionStyle: "fade" } },
 
-  // --- Save ---
-  { input: "save this as chill", assert: { type: "save", saveName: "chill" } },
-  { input: "save bedroom as relax", assert: { type: "save", saveName: "relax", room: "bedroom" } },
-  { input: "save scp", assert: { type: "save", saveName: "scp" } },
-  { input: "save as movie", assert: { type: "save", saveName: "movie" } },
-  { input: "save bathroom as spa", assert: { type: "save", saveName: "spa", room: "bathroom" } },
-  { input: "save this as night mode", assert: { type: "save", saveName: "night mode" } },
-
   // --- Recall ---
   { input: "recall chill", assert: { type: "recall", recallName: "chill" } },
   { input: "load relax", assert: { type: "recall", recallName: "relax" } },
   { input: "recall scp", assert: { type: "recall", recallName: "scp" } },
   { input: "load movie", assert: { type: "recall", recallName: "movie" } },
-
-  // --- Schedule ---
-  { input: "bedroom off at 11pm every day", assert: { type: "schedule", room: "bedroom", scheduleTimeHour: 23 } },
-  { input: "bathroom warm at 7am on weekdays", assert: { type: "schedule", room: "bathroom", scheduleTimeHour: 7 } },
 
   // --- Aliases ---
   { input: "bed off", assert: { type: "power", room: "bedroom", state: "OFF" } },
@@ -151,10 +136,6 @@ const testCases: TestCase[] = [
   { input: "breathing red", assert: { type: "complex", room: "all", repeat: true, transitionStyle: "fade" } },
   { input: "make it blink blue", assert: { type: "complex", room: "all", repeat: true } },
 
-  // --- Schedule with natural phrasing ---
-  { input: "wake me up at 7am with warm lights", assert: { type: "schedule", room: "all", scheduleTimeHour: 7 } },
-  { input: "kill the lights at midnight every night", assert: { type: "schedule", room: "all", scheduleTimeHour: 0 } },
-
   // ===== NOVEL INTERPRETATION (no hints given in prompts) =====
 
   // --- Colors the LLM has never been told about ---
@@ -196,9 +177,6 @@ const testCases: TestCase[] = [
   { input: "twinkle", assert: { type: "complex", room: "all", repeat: true } },
   { input: "pulsating blue", assert: { type: "complex", room: "all", repeat: true, transitionStyle: "fade" } },
 
-  // --- Schedule with novel phrasing ---
-  { input: "dim at 9pm nightly", assert: { type: "schedule", room: "all", scheduleTimeHour: 21 } },
-  { input: "bright and cool at 6am on weekdays", assert: { type: "schedule", room: "all", scheduleTimeHour: 6 } },
 ];
 
 // --- Assertion helpers ---
@@ -278,27 +256,9 @@ function assertCommand(result: ParsedCommand, expected: Assertion, input: string
     assert.equal(result.transition_style, expected.transitionStyle, `${label}: transition_style`);
   }
 
-  if (expected.saveName !== undefined) {
-    assert.ok(result.type === "save", `${label}: expected save type`);
-    assert.equal(result.name, expected.saveName, `${label}: save name`);
-  }
-
   if (expected.recallName !== undefined) {
     assert.ok(result.type === "recall", `${label}: expected recall type`);
     assert.equal(result.name, expected.recallName, `${label}: recall name`);
-  }
-
-  if (expected.scheduleTimeHour !== undefined) {
-    assert.ok(result.type === "schedule", `${label}: expected schedule type`);
-    const hour = parseInt(result.time.split(":")[0], 10);
-    assert.equal(hour, expected.scheduleTimeHour, `${label}: schedule hour — got ${hour}, expected ${expected.scheduleTimeHour}`);
-  }
-
-  if (expected.scheduleDays !== undefined && result.type === "schedule") {
-    assert.ok(
-      result.days.toLowerCase().includes(expected.scheduleDays.toLowerCase()),
-      `${label}: schedule days — got "${result.days}", expected to contain "${expected.scheduleDays}"`
-    );
   }
 }
 

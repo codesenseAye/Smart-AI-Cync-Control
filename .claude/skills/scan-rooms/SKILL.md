@@ -5,12 +5,12 @@ argument-hint: [path-to-cync_mesh.yaml] [--auto] [--list] [--merge]
 disable-model-invocation: true
 ---
 
-Generate or update `src/data/rooms.json` by scanning a `cync_mesh.yaml` config file from cync-lan.
+Generate or update `src/data/rooms.json` by scanning a `cync_mesh.yaml` config file.
 
 Run the scan-rooms script: `npx tsx scripts/scan-rooms.ts $ARGUMENTS`
 
 This script:
-1. Finds and parses cync_mesh.yaml (searches `./cync-lan/` by default, or accepts a path argument)
+1. Finds and parses cync_mesh.yaml (searches the project root by default, or accepts a path argument)
 2. Extracts the home ID and all devices with their names, IDs, capabilities, and enabled status
 3. Auto-groups enabled devices into rooms by parsing device name prefixes (e.g. "Living Room Plug" -> "living room")
 4. Shows the proposed grouping and enters interactive mode for adjustments
@@ -40,7 +40,7 @@ When running without `--auto`, the user can adjust groupings:
 ## Examples
 
 ```bash
-# Interactive scan from default cync-lan location
+# Interactive scan from default location
 npx tsx scripts/scan-rooms.ts
 
 # Auto-generate from specific file

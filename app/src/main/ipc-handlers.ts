@@ -21,6 +21,11 @@ export function registerIpcHandlers(
   ipcMain.handle("services:status", async () => {
     return services.getAllStatuses();
   });
+
+  // Fetch saved presets from the wrapper server
+  ipcMain.handle("saves:list", async () => {
+    return getSaves(config);
+  });
 }
 
 function postCommand(
@@ -59,6 +64,39 @@ function postCommand(
       reject(new Error("Command request timed out"));
     });
     req.write(body);
+    req.end();
+  });
+}
+
+function getSaves(config: AppConfig): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        hostname: "localhost",
+        port: config.port,
+        path: "/saves",
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+        },
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch {
+            resolve([]);
+          }
+        });
+      }
+    );
+    req.on("error", (err) => reject(err));
+    req.setTimeout(10_000, () => {
+      req.destroy();
+      reject(new Error("Request timed out"));
+    });
     req.end();
   });
 }

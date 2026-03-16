@@ -25,9 +25,9 @@ const API_BASE = "https://api.gelighting.com/v2";
 const CORP_ID = "1007d2ad150c4000";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "..");
-const OUTPUT_PATH = join(PROJECT_ROOT, "cync-lan", "cync_mesh.yaml");
+const OUTPUT_PATH = join(PROJECT_ROOT, "cync_mesh.yaml");
 
-// Device type → capability lookup (from cync-lan metadata/model_info.py)
+// Device type → capability lookup (Cync device type codes)
 const PLUG_TYPES = new Set([64, 65, 66, 67, 68]);
 
 const RGB_TYPES = new Set([

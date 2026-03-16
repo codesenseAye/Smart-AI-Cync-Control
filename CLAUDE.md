@@ -1,6 +1,6 @@
 # smart-ai-cync-control
 
-Voice-controlled TypeScript server that wraps [cync-lan](./cync-lan/) to control Cync/GE smart lights over MQTT using natural language parsed by a local LLM.
+Voice-controlled TypeScript server that controls Cync/GE smart lights using natural language parsed by a local LLM. A built-in TLS relay proxy sits between Cync devices and the real cloud server, parsing status packets and injecting local control commands while keeping the Cync mobile app and cloud features functional.
 
 ## Quick Start
 
@@ -9,8 +9,8 @@ npm install
 # Fill in .env (see Environment Variables below)
 # Fill in src/data/rooms.json (see Room Config below)
 # Start LM Studio with your model loaded
-# Start cync-lan (separate process)
-# Start MQTT broker (e.g. Mosquitto on Home Assistant)
+# Start MQTT broker (e.g. Mosquitto)
+# Enable DNS override so Cync devices connect to the proxy
 npm run dev          # development (tsx watch)
 npm run build        # compile to dist/
 npm start            # production (node dist/index.js)
@@ -24,19 +24,23 @@ DNS override requires **Technitium DNS Server** running locally (see DNS Overrid
 |---|---|---|---|
 | `API_KEY` | **Yes** | — | Bearer token for all API endpoints |
 | `LIGHTS_PORT` | No | `3001` | HTTP server port |
-| `MQTT_BROKER_URL` | No | `mqtt://homeassistant.local:1883` | MQTT broker URL (same one cync-lan connects to) |
+| `MQTT_BROKER_URL` | No | `mqtt://localhost:1883` | MQTT broker URL |
 | `MQTT_USERNAME` | No | — | MQTT auth username |
 | `MQTT_PASSWORD` | No | — | MQTT auth password |
 | `LLM_MODEL` | No | `google/gemma-3-4b` | Model identifier loaded in LM Studio |
-| `CYNC_MQTT_TOPIC` | No | `cync_lan` | MQTT topic prefix (must match cync-lan config) |
-| `CYNC_LAN_IP` | No | — | LAN IP of the machine running cync-lan, used for DNS override |
+| `CYNC_MQTT_TOPIC` | No | `cync_lan` | MQTT topic prefix |
+| `CYNC_LAN_IP` | No | — | LAN IP of this machine, used for DNS override |
 | `TECHNITIUM_URL` | No | `http://localhost:5380` | Technitium DNS Server API URL |
 | `TECHNITIUM_USERNAME` | No | `admin` | Technitium admin username |
 | `TECHNITIUM_PASSWORD` | No | `admin` | Technitium admin password |
+| `PROXY_PORT` | No | `23779` | Proxy listen port |
+| `PROXY_CLOUD_DOMAIN` | No | `cm.gelighting.com` | Cloud domain to resolve and relay to |
+| `PROXY_CLOUD_PORT` | No | `23779` | Real Cync cloud server port |
+| `PROXY_DNS_SERVER` | No | `8.8.8.8` | External DNS server for resolving cloud IP |
 
 ## Room Config (src/data/rooms.json)
 
-Maps room names to cync-lan device IDs. Device IDs come from your `cync_mesh.yaml` (the numeric keys under `devices:`). The `home_id` is the numeric `id` field from your cync-lan config under `account data > Home > id`.
+Maps room names to Cync device IDs. Device IDs come from `cync_mesh.yaml` (the numeric keys under `devices:`), exported via `/export-cync`. The `home_id` is the numeric `id` field from your Cync account data under `Home > id`.
 
 ```json
 {
@@ -54,7 +58,7 @@ Maps room names to cync-lan device IDs. Device IDs come from your `cync_mesh.yam
 }
 ```
 
-- `devices`: array of device ID numbers from cync_mesh.yaml
+- `devices`: array of device ID numbers from `cync_mesh.yaml`
 - `aliases`: alternative names the LLM can recognize for this room
 - The keyword `"all"` is handled in code (targets every device across all rooms)
 
@@ -67,32 +71,36 @@ Voice App  -->  POST /command {"text": "kitchen warm dim"}
                        |
                    LLM (LM Studio SDK)  -->  ParsedCommand JSON
                        |
-                   Executor  -->  MQTT publish to cync-lan
+                   Executor  -->  MQTT publish
                        |
-                   cync-lan  -->  Cync devices on LAN
+                   TLS Proxy
+                       |
+              Cync devices ←→ Real Cloud
 ```
+
+The TLS proxy acts as a transparent MITM relay between Cync devices and the real cloud server. At startup it resolves the cloud IP via an external DNS server (default 8.8.8.8) and auto-generates a self-signed cert. It parses status packets (0x43/0x83) from the device stream for MQTT state publishing and injects local control commands (0x73) when MQTT set messages arrive. The Cync mobile app and cloud features (schedules, saves) continue working normally since all traffic is relayed.
 
 ### Services
 
 | Service | File | Purpose |
 |---|---|---|
 | **LLM** | `src/services/llm.ts` | Connects to LM Studio via `@lmstudio/sdk`. Sends voice text + system prompt, gets structured JSON back. Retries once on validation failure. |
-| **MQTT** | `src/services/mqtt.ts` | Connects to MQTT broker, subscribes to `cync_lan/status/#`, maintains in-memory device state cache. Publishes commands to `cync_lan/set/{id}`. |
+| **MQTT** | `src/services/mqtt.ts` | Connects to MQTT broker, subscribes to `cync_lan/status/#` and `cync_lan/set/#`. Maintains in-memory device state cache. Routes set commands through the proxy. |
 | **Executor** | `src/services/executor.ts` | Takes a `ParsedCommand`, resolves room -> device IDs, dispatches to the appropriate handler. Central command router. |
 | **Effects** | `src/services/effects.ts` | Runs timed MQTT sequences for complex animations (e.g. "red slow flash"). Uses `AbortController` for cancellation. One active effect per device. Min step: 250ms. |
-| **Saves** | `src/services/saves.ts` | SQLite. Snapshots current device states from MQTT cache and stores them by name. Recall replays the stored states. |
-| **Scheduler** | `src/services/scheduler.ts` | SQLite + `node-cron`. Stores scheduled commands, converts `time`+`days` to cron expressions, re-registers all jobs on startup. |
-| **DNS** | `src/services/dns.ts` | Manages Technitium DNS Server zones to redirect Cync cloud domains to the local cync-lan server network-wide. |
+| **Saves** | `src/services/saves.ts` | SQLite. Stores saved device states by name. Recall replays the stored states. |
+| **Protocol** | `src/services/protocol.ts` | Cync binary protocol parser and command builder. |
+| **Proxy** | `src/services/proxy.ts` | Transparent TLS MITM relay between Cync devices and cloud. Parses status, injects commands. |
+| **DNS** | `src/services/dns.ts` | Manages Technitium DNS Server zones to redirect Cync cloud domains to the local proxy network-wide. |
 
 ### Routes
 
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/command` | Main voice command endpoint. Body: `{"text": "..."}`. Returns parsed interpretation + execution result. |
-| `GET` | `/status` | Current device states from MQTT cache |
+| `GET` | `/status` | Current device states from MQTT cache + proxy info |
 | `GET` | `/devices` | Room-to-device mapping from rooms.json |
-| `GET` | `/saves` | List saved light state shortcuts |
-| `GET` | `/schedules` | List scheduled commands |
+| `GET` | `/saves` | List saved presets |
 | `POST` | `/dns/enable` | Enable DNS override (redirects Cync cloud domains to `CYNC_LAN_IP`) |
 | `POST` | `/dns/disable` | Disable DNS override (restores normal DNS) |
 | `GET` | `/dns/status` | Check if DNS override is active |
@@ -102,7 +110,7 @@ All routes except `/health` require `Authorization: Bearer <API_KEY>` header.
 
 ## Command Types
 
-The LLM parses voice text into one of 7 command types (discriminated union on `type` field):
+The LLM parses voice text into one of 5 command types (discriminated union on `type` field):
 
 | Type | Example Voice Input | LLM Output |
 |---|---|---|
@@ -110,9 +118,7 @@ The LLM parses voice text into one of 7 command types (discriminated union on `t
 | `simple` | "kitchen warm dim", "bedroom red", "bright cool" | `{"type":"simple","room":"kitchen","brightness":25,"color_temp_kelvin":2700}` |
 | `effect` | "kitchen rainbow", "candle", "bedroom aurora" | `{"type":"effect","room":"kitchen","effect":"rainbow"}` |
 | `complex` | "red slow flash", "blue pulse every 2 seconds" | `{"type":"complex","room":"all","sequence":[...],"repeat":true,"transition_style":"fade"}` |
-| `save` | "save chill", "save bedroom as relax" | `{"type":"save","name":"chill","room":"all"}` |
 | `recall` | "chill", "recall relax" | `{"type":"recall","name":"chill"}` |
-| `schedule` | "kitchen off at 11pm daily" | `{"type":"schedule","name":"...","room":"kitchen","time":"23:00","days":"daily","state":{...}}` |
 
 ### Color/Brightness Shortcuts in System Prompt
 
@@ -127,7 +133,7 @@ The LLM parses voice text into one of 7 command types (discriminated union on `t
 
 ## MQTT Protocol Reference
 
-cync-lan publishes device state to `cync_lan/status/{home_id}-{device_id}` and accepts commands on `cync_lan/set/{home_id}-{device_id}`.
+The proxy publishes device state to `cync_lan/status/{home_id}-{device_id}` and accepts commands on `cync_lan/set/{home_id}-{device_id}`.
 
 ### Command Payloads
 
@@ -149,7 +155,7 @@ cync-lan publishes device state to `cync_lan/status/{home_id}-{device_id}` and a
 {"state": "ON", "effect": "rainbow"}
 ```
 
-### State Messages (from cync-lan)
+### State Messages (from proxy)
 
 ```json
 {
@@ -162,13 +168,13 @@ cync-lan publishes device state to `cync_lan/status/{home_id}-{device_id}` and a
 
 ## DNS Override
 
-Cync devices normally connect to cloud servers. cync-lan intercepts by redirecting these domains to the local server:
+Cync devices normally connect to cloud servers. The proxy intercepts by redirecting these domains to the local machine:
 
 - `cm.gelighting.com`
 - `cm-sec.gelighting.com`
 - `cm-ge.xlink.cn`
 
-The DNS service uses **Technitium DNS Server** (running locally on port 5380) to create primary zones for each domain with A records pointing to the cync-lan IP. This works **network-wide** — any device on the network using Technitium as its DNS server will resolve these domains to cync-lan.
+The DNS service uses **Technitium DNS Server** (running locally on port 5380) to create primary zones for each domain with A records pointing to the local IP. This works **network-wide** — any device on the network using Technitium as its DNS server will resolve these domains to the proxy.
 
 ### Setup
 
@@ -183,7 +189,7 @@ The DNS service uses **Technitium DNS Server** (running locally on port 5380) to
 3. After Technitium is running, configure it to use upstream DNS (e.g. `8.8.8.8`, `1.1.1.1`) in its **Settings → Forwarders** so it can resolve normal domains
 4. Set a static IP on the PC (Settings → Network → Wi-Fi/Ethernet → IP assignment → Manual) so the DNS settings remain stable
 5. Set your router's DHCP DNS to your PC's static LAN IP so all network devices use Technitium
-6. Set `CYNC_LAN_IP` in `.env` to the machine's LAN IP where cync-lan runs
+6. Set `CYNC_LAN_IP` in `.env` to this machine's LAN IP
 7. Use `POST /dns/enable` or `/dns enable` to create the override zones
 8. Use `POST /dns/disable` or `/dns disable` to remove them
 
@@ -254,12 +260,11 @@ Restart the PC. This restores Windows DNS defaults and stops Technitium from aut
 
 ## Prerequisites
 
-1. **cync-lan** running and connected to your Cync devices (separate Python process)
-2. **MQTT broker** (e.g. Mosquitto on Home Assistant) — cync-lan and this server both connect to it
-3. **LM Studio** running locally with a model loaded (the SDK auto-discovers it, no URL config needed)
-4. **Node.js** >= 18 (ES2022 target)
-5. **cync_mesh.yaml** configured in cync-lan with your device IDs, home ID, and access key
-6. **Technitium DNS Server** for network-wide DNS override (optional, only needed for DNS feature)
+1. **MQTT broker** (e.g. Mosquitto) running locally
+2. **LM Studio** running locally with a model loaded (the SDK auto-discovers it, no URL config needed)
+3. **Node.js** >= 18 (ES2022 target)
+4. **`cync_mesh.yaml`** exported via `/export-cync` (contains device IDs, home ID, and access key)
+5. **Technitium DNS Server** for network-wide DNS override so Cync devices connect to the proxy
 
 ## Tech Stack
 
@@ -267,8 +272,8 @@ Restart the PC. This restores Windows DNS defaults and stops Technitium from aut
 - Express.js for HTTP
 - `@lmstudio/sdk` for local LLM inference (auto-discovers LM Studio)
 - `mqtt` for MQTT pub/sub
-- `better-sqlite3` for saves and schedules persistence (WAL mode)
-- `node-cron` for scheduled command execution
+- `better-sqlite3` for saves persistence (WAL mode)
+- `selfsigned` for auto-generating TLS certificates
 - `zod` for LLM output validation
 
 ## Build & Run
@@ -286,9 +291,9 @@ SQLite database is created at `src/data/state.db` (gitignored). The `rooms.json`
 
 ## Boot Sequence
 
-1. SQLite database init (creates tables for saves + schedules)
+1. SQLite database init (creates tables for saves)
 2. Saves service init
-3. Scheduler service init (loads and registers all enabled cron jobs)
-4. MQTT connect + subscribe to status topics (non-fatal if broker unavailable)
-5. LM Studio SDK init (non-fatal if LM Studio not running)
+3. MQTT connect + subscribe to status and set topics (non-fatal if broker unavailable)
+4. LM Studio SDK init (non-fatal if LM Studio not running)
+5. TLS relay proxy start — resolves cloud IP via external DNS, generates self-signed cert (non-fatal)
 6. Express HTTP server start on `LIGHTS_PORT`

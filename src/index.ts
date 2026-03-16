@@ -8,11 +8,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 import { mqttService } from "./services/mqtt.js";
 import { initLLM } from "./services/llm.js";
 import { savesService } from "./services/saves.js";
-import { schedulerService } from "./services/scheduler.js";
 import { execute } from "./services/executor.js";
 import { commandRouter } from "./routes/command.js";
 import { statusRouter } from "./routes/status.js";
 import { dnsRouter } from "./routes/dns.js";
+import { proxyService } from "./services/proxy.js";
 
 const app = express();
 app.use(express.json());
@@ -56,7 +56,6 @@ async function start() {
 
   // 2. Init services that need DB
   savesService.init(db);
-  schedulerService.init(db, execute);
 
   // 3. Connect MQTT
   try {
@@ -74,14 +73,23 @@ async function start() {
     console.warn("[boot] LM Studio SDK init failed — commands will fail until LM Studio is running:", e);
   }
 
-  // 5. Start HTTP
+  // 5. Start proxy
+  try {
+    await proxyService.start();
+    mqttService.onCommand((deviceId, command) => proxyService.sendCommand(deviceId, command));
+    console.log("[boot] TLS relay proxy started");
+  } catch (e) {
+    console.error("[boot] Proxy start failed:", e);
+    console.warn("[boot] Server will start but proxy relay will not work");
+  }
+
+  // 6. Start HTTP
   app.listen(config.port, () => {
     console.log(`[boot] Server listening on port ${config.port}`);
     console.log(`[boot] POST /command  — voice command endpoint`);
     console.log(`[boot] GET  /status   — device states`);
     console.log(`[boot] GET  /devices  — room mapping`);
     console.log(`[boot] GET  /saves    — saved shortcuts`);
-    console.log(`[boot] GET  /schedules — scheduled commands`);
     console.log(`[boot] POST /dns/enable  — enable DNS override`);
     console.log(`[boot] POST /dns/disable — disable DNS override`);
     console.log(`[boot] GET  /dns/status  — DNS override status`);

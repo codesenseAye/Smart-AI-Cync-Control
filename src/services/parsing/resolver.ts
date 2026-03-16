@@ -111,26 +111,6 @@ function resolveDevices(deviceMention: string | null): { room: string; device_id
   return null;
 }
 
-// --- Schedule Time Parsing ---
-
-function parseTime(timeMention: string): string {
-  const lower = timeMention.toLowerCase().trim();
-  if (lower === "midnight") return "00:00";
-  if (lower === "noon" || lower === "midday") return "12:00";
-
-  const match = timeMention.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
-  if (!match) return "00:00";
-
-  let hours = parseInt(match[1], 10);
-  const minutes = match[2] ? parseInt(match[2], 10) : 0;
-  const ampm = match[3]?.toLowerCase();
-
-  if (ampm === "pm" && hours < 12) hours += 12;
-  if (ampm === "am" && hours === 12) hours = 0;
-
-  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
-}
-
 // --- Room Fallback from Raw Text ---
 
 function resolveRoomFromText(rawText: string): string {
@@ -144,23 +124,9 @@ function resolveRoomFromText(rawText: string): string {
   return "all";
 }
 
-// --- Save/Recall Name Fallback from Raw Text ---
+// --- Recall Name Fallback from Raw Text ---
 
-const SAVE_NOISE = new Set(["save", "as", "this", "it", "the", "my", "current", "lights"]);
 const RECALL_NOISE = new Set(["recall", "load", "restore", "set", "to", "it", "the", "my"]);
-
-function extractSaveName(rawText: string): string | null {
-  const words = rawText.toLowerCase().trim().split(/\s+/).filter((w) => !SAVE_NOISE.has(w));
-  // Remove room names/aliases
-  const filtered = words.filter((w) => {
-    if (config.rooms.rooms[w]) return false;
-    for (const room of Object.values(config.rooms.rooms)) {
-      if (room.aliases.some((a) => a.toLowerCase() === w)) return false;
-    }
-    return true;
-  });
-  return filtered.length > 0 ? filtered.join(" ") : null;
-}
 
 function extractRecallName(rawText: string): string | null {
   const words = rawText.toLowerCase().trim().split(/\s+/).filter((w) => !RECALL_NOISE.has(w));
@@ -196,8 +162,8 @@ export function resolveCommand(
   // Minimal reclassification — trust intent, only apply safety nets
   let type = intent.intent;
 
-  // Safety net: expression found animation but intent didn't classify as complex/schedule
-  if (hasAnimation && type !== "schedule" && type !== "complex") {
+  // Safety net: expression found animation but intent didn't classify as complex
+  if (hasAnimation && type !== "complex") {
     type = "complex";
   }
   // Safety net: intent says "effect" but no factory effect found
@@ -268,56 +234,10 @@ export function resolveCommand(
       };
     }
 
-    case "save": {
-      return {
-        type: "save",
-        name: intent.save_name ?? extractSaveName(rawText) ?? "unnamed",
-        room,
-        ...(device_ids && { device_ids }),
-      };
-    }
-
     case "recall": {
       return {
         type: "recall",
         name: intent.save_name ?? extractRecallName(rawText) ?? "unnamed",
-      };
-    }
-
-    case "schedule": {
-      const time = intent.time_mention ? parseTime(intent.time_mention) : "00:00";
-      const days = intent.days_mention ?? "daily";
-      const name = intent.save_name ?? `schedule_${time.replace(":", "")}`;
-
-      // Build inner command from expression results
-      let innerCommand: ParsedCommand;
-
-      if (hasEffect && expression?.effect_name) {
-        innerCommand = { type: "effect", room, effect: expression.effect_name };
-      } else if (hasColorOrBrightness) {
-        innerCommand = {
-          type: "simple",
-          room,
-          ...(expression?.brightness !== undefined && { brightness: expression.brightness }),
-          ...(expression?.color_temp_kelvin !== undefined && { color_temp_kelvin: expression.color_temp_kelvin }),
-          ...(expression?.rgb !== undefined && { rgb: snapToPalette(expression.rgb) }),
-        };
-      } else {
-        innerCommand = {
-          type: "power",
-          room,
-          state: intent.power_state === "on" ? "ON" : "OFF",
-        };
-      }
-
-      return {
-        type: "schedule",
-        name,
-        room,
-        time,
-        days,
-        state: innerCommand as any,
-        ...(device_ids && { device_ids }),
       };
     }
 

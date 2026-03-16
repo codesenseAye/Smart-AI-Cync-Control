@@ -76,20 +76,6 @@ async function main() {
     console.warn("[bundle-server] WARNING: rooms.json not found — exe will use template config");
   }
 
-  const composeFile = path.join(PROJECT_ROOT, "cync-lan", "docker", "docker-compose.yaml");
-  if (fs.existsSync(composeFile)) {
-    fs.copyFileSync(composeFile, path.join(configDir, "docker-compose.yaml"));
-    console.log("[bundle-server] Bundled docker-compose.yaml");
-  }
-
-  // Bundle cync-lan config directory (cync_mesh.yaml etc.)
-  const cyncConfigSrc = path.join(PROJECT_ROOT, "cync-lan", "docker", "config");
-  const cyncConfigDst = path.join(configDir, "cync-lan-config");
-  if (fs.existsSync(cyncConfigSrc)) {
-    copyDirSync(cyncConfigSrc, cyncConfigDst);
-    console.log("[bundle-server] Bundled cync-lan config/");
-  }
-
   console.log("[bundle-server] Done.");
 }
 

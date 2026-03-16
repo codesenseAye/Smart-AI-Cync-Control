@@ -109,7 +109,7 @@ class DnsService {
       }
 
       console.log(
-        `[dns] Enabled cync-lan DNS override via Technitium: ${CYNC_DOMAINS.join(", ")} -> ${targetIp}`
+        `[dns] Enabled DNS override via Technitium: ${CYNC_DOMAINS.join(", ")} -> ${targetIp}`
       );
 
       return {
@@ -143,7 +143,7 @@ class DnsService {
         };
       }
 
-      console.log("[dns] Disabled cync-lan DNS override via Technitium");
+      console.log("[dns] Disabled DNS override via Technitium");
       return {
         ok: true,
         detail:

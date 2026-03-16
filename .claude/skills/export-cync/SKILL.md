@@ -5,7 +5,7 @@ argument-hint: (no arguments)
 disable-model-invocation: true
 ---
 
-Export device configuration from the Cync Cloud API and write `cync-lan/cync_mesh.yaml`. This is a two-step process that collects credentials interactively.
+Export device configuration from the Cync Cloud API and write `cync_mesh.yaml` to the project root. This is a two-step process that collects credentials interactively.
 
 ## Steps
 
@@ -17,7 +17,7 @@ Export device configuration from the Cync Cloud API and write `cync-lan/cync_mes
 3. **Ask for OTP** — Use AskUserQuestion to ask the user for the OTP code they received in their email.
 
 4. **Export** — Run: `npx tsx scripts/export-cync.ts export --email <email> --password <password> --otp <otp>`
-   This authenticates, fetches all homes and devices, and writes `cync-lan/cync_mesh.yaml`.
+   This authenticates, fetches all homes and devices, and writes `cync_mesh.yaml`.
 
 5. **Report results** — Show the user the output. Suggest running `/scan-rooms` to generate `rooms.json` from the exported config.
 
@@ -26,7 +26,7 @@ Export device configuration from the Cync Cloud API and write `cync-lan/cync_mes
 1. Authenticates with the Cync Cloud API using email, password, and OTP two-factor code
 2. Fetches all homes and devices associated with the account
 3. Determines device capabilities (RGB, color temperature, plug) from device type codes
-4. Writes `cync-lan/cync_mesh.yaml` in the `account data` format that `/scan-rooms` expects
+4. Writes `cync_mesh.yaml` in the `account data` format that `/scan-rooms` expects
 
 ## Direct terminal usage
 

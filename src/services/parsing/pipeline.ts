@@ -18,8 +18,8 @@ export async function parseCommand(text: string): Promise<ParsedCommand> {
   console.log(`[pipeline] Intent:`, JSON.stringify(intent));
 
   // Only use expression for intents that need parameter extraction
-  // Power/save/recall don't need it — discard to prevent hallucination interference
-  const expression = (intent.intent !== "power" && intent.intent !== "save" && intent.intent !== "recall")
+  // Power/recall don't need it — discard to prevent hallucination interference
+  const expression = (intent.intent !== "power" && intent.intent !== "recall")
     ? expressionResult
     : undefined;
 

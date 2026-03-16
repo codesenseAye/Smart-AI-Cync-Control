@@ -2,14 +2,25 @@ import mqtt from "mqtt";
 import { config } from "../config.js";
 import type { DeviceState } from "../types/index.js";
 
+type CommandHandler = (
+  deviceId: number,
+  command: { state?: "ON" | "OFF"; brightness?: number; color_temp?: number; color?: { r: number; g: number; b: number }; effect?: string },
+) => boolean;
+
 class MqttService {
   private client: mqtt.MqttClient | null = null;
   private stateCache = new Map<string, DeviceState>();
   private connected = false;
   private topicPrefix: string;
+  private commandHandler: CommandHandler | null = null;
 
   constructor() {
     this.topicPrefix = config.mqtt.topic;
+  }
+
+  /** Register a handler for MQTT set commands (used by proxy for command routing). */
+  onCommand(handler: CommandHandler): void {
+    this.commandHandler = handler;
   }
 
   async connect(): Promise<void> {
@@ -41,6 +52,16 @@ class MqttService {
             );
           }
         });
+
+        // Subscribe to set commands (route through proxy)
+        this.client!.subscribe(`${this.topicPrefix}/set/#`, (err) => {
+          if (err) {
+            console.error("[mqtt] Subscribe to set/# error:", err);
+          } else {
+            console.log(`[mqtt] Subscribed to ${this.topicPrefix}/set/# (proxy command routing)`);
+          }
+        });
+
         resolve();
       });
 
@@ -65,21 +86,34 @@ class MqttService {
 
   private handleMessage(topic: string, payload: string): void {
     const parts = topic.split("/");
-    // cync_lan/status/{device_id}
-    if (parts[0] !== this.topicPrefix || parts[1] !== "status") return;
+    if (parts[0] !== this.topicPrefix) return;
 
-    const deviceId = parts[2];
-    if (!deviceId || !deviceId.includes("-")) return;
-    // Skip bridge/system topics like status/bridge/...
-    if (deviceId === "bridge") return;
+    if (parts[1] === "status") {
+      const deviceId = parts[2];
+      if (!deviceId || !deviceId.includes("-")) return;
+      if (deviceId === "bridge") return;
 
-    try {
-      const state = JSON.parse(payload) as DeviceState;
-      this.stateCache.set(deviceId, state);
-    } catch {
-      // Some devices publish plain text "ON"/"OFF"
-      if (payload === "ON" || payload === "OFF") {
-        this.stateCache.set(deviceId, { state: payload });
+      try {
+        const state = JSON.parse(payload) as DeviceState;
+        this.stateCache.set(deviceId, state);
+      } catch {
+        if (payload === "ON" || payload === "OFF") {
+          this.stateCache.set(deviceId, { state: payload });
+        }
+      }
+    } else if (parts[1] === "set" && this.commandHandler) {
+      const deviceId = parts[2];
+      if (!deviceId || !deviceId.includes("-")) return;
+
+      // Extract numeric device ID (after the dash)
+      const numericId = parseInt(deviceId.split("-")[1], 10);
+      if (isNaN(numericId)) return;
+
+      try {
+        const command = JSON.parse(payload);
+        this.commandHandler(numericId, command);
+      } catch {
+        console.warn(`[mqtt] Failed to parse set command for ${deviceId}`);
       }
     }
   }
@@ -93,6 +127,14 @@ class MqttService {
     const msg = JSON.stringify(payload);
     this.client.publish(topic, msg);
     console.log(`[mqtt] Published to ${topic}: ${msg}`);
+  }
+
+  /** Publish device state (used by proxy to report status from parsed packets). */
+  publishState(deviceId: string, state: Record<string, unknown>): void {
+    if (!this.client || !this.connected) return;
+    const topic = `${this.topicPrefix}/status/${deviceId}`;
+    const msg = JSON.stringify(state);
+    this.client.publish(topic, msg, { retain: true });
   }
 
   getState(deviceId: string): DeviceState | undefined {

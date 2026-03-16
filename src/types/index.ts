@@ -40,20 +40,11 @@ export interface EffectStep {
 // --- Parsed Command (discriminated union from LLM) ---
 
 export type ParsedCommand =
-  | SaveCommand
   | RecallCommand
   | PowerCommand
   | SimpleCommand
   | EffectCommand
-  | ComplexCommand
-  | ScheduleCommand;
-
-export interface SaveCommand {
-  type: "save";
-  name: string;
-  room: string;
-  device_ids?: number[];
-}
+  | ComplexCommand;
 
 export interface RecallCommand {
   type: "recall";
@@ -92,16 +83,6 @@ export interface ComplexCommand {
   device_ids?: number[];
 }
 
-export interface ScheduleCommand {
-  type: "schedule";
-  name: string;
-  room: string;
-  time: string;
-  days: string;
-  state: Exclude<ParsedCommand, ScheduleCommand>;
-  device_ids?: number[];
-}
-
 // --- Zod Schemas for LLM output validation ---
 
 const rgbSchema = z.object({
@@ -118,13 +99,6 @@ const effectStepSchema = z.object({
 });
 
 const deviceIdsSchema = z.array(z.number().int().positive()).optional().nullable().transform((v) => v ?? undefined);
-
-const saveSchema = z.object({
-  type: z.literal("save"),
-  name: z.string().min(1).max(50),
-  room: z.string().min(1),
-  device_ids: deviceIdsSchema,
-});
 
 const recallSchema = z.object({
   type: z.literal("recall"),
@@ -163,31 +137,12 @@ const complexSchema = z.object({
   device_ids: deviceIdsSchema,
 });
 
-// Schedule uses a non-recursive inner command schema
-const innerCommandSchema = z.discriminatedUnion("type", [
-  powerSchema,
-  simpleSchema,
-  effectSchema,
-]);
-
-const scheduleSchema = z.object({
-  type: z.literal("schedule"),
-  name: z.string().min(1).max(50),
-  room: z.string().min(1),
-  time: z.string().regex(/^\d{2}:\d{2}$/),
-  days: z.string().min(1),
-  state: innerCommandSchema,
-  device_ids: deviceIdsSchema,
-});
-
 export const parsedCommandSchema = z.discriminatedUnion("type", [
-  saveSchema,
   recallSchema,
   powerSchema,
   simpleSchema,
   effectSchema,
   complexSchema,
-  scheduleSchema,
 ]);
 
 // --- Saved State (DB) ---
@@ -207,17 +162,6 @@ export interface SavedState {
   name: string;
   room: string;
   states: SavedDeviceState[];
-  created_at: string;
-}
-
-// --- Schedule (DB) ---
-
-export interface Schedule {
-  name: string;
-  cron: string;
-  room: string;
-  command: ParsedCommand;
-  enabled: boolean;
   created_at: string;
 }
 
