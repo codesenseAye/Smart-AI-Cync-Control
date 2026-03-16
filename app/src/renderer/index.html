@@ -8,17 +8,46 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Hamburger menu -->
-  <button id="menu-btn" class="menu-btn" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
-  <nav id="menu-nav" class="menu-nav hidden">
-    <button class="menu-item active" data-page="home">Home</button>
-    <button class="menu-item" data-page="saves">Saves &amp; Schedules</button>
+  <!-- Bottom tab bar -->
+  <nav id="tab-bar" class="tab-bar">
+    <button class="tab-item active" data-page="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="tab-item" data-page="server">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="7" rx="1"/><rect x="2" y="14" width="20" height="7" rx="1"/><circle cx="6" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="6" cy="17.5" r="1" fill="currentColor" stroke="none"/></svg>
+      <span>Server</span>
+    </button>
+    <button class="tab-item" data-page="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span>Settings</span>
+    </button>
   </nav>
 
   <!-- Page: Home -->
   <div class="page active" id="page-home">
+    <div class="container">
+      <!-- Command Input -->
+      <section class="command-section">
+        <div class="command-input-row">
+          <input type="text" id="command-input" placeholder='e.g. "kitchen warm dim"' autocomplete="off">
+          <button id="send-btn">Run</button>
+        </div>
+        <div id="command-error" class="command-error hidden"></div>
+      </section>
+
+      <!-- Device Activity Feed -->
+      <section class="feed-section">
+        <h2>Device Activity</h2>
+        <div id="event-feed" class="event-feed">
+          <p class="empty-msg">No device activity yet</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Page: Server -->
+  <div class="page" id="page-server">
     <div class="container">
       <!-- Services -->
       <section class="services">
@@ -42,16 +71,6 @@
         </div>
       </section>
 
-      <!-- Command Input -->
-      <section class="command-section">
-        <h2>Command</h2>
-        <div class="command-input-row">
-          <input type="text" id="command-input" placeholder='e.g. "kitchen warm dim"' autocomplete="off">
-          <button id="send-btn">Send</button>
-        </div>
-        <div id="command-result" class="command-result hidden"></div>
-      </section>
-
       <!-- Server Logs -->
       <section class="logs-section">
         <h2>Server Logs</h2>
@@ -60,18 +79,76 @@
     </div>
   </div>
 
-  <!-- Page: Saves & Schedules -->
-  <div class="page" id="page-saves">
+
+  <!-- Page: Settings -->
+  <div class="page" id="page-settings">
     <div class="container">
-      <section class="saves-section">
-        <h2>Saved Presets</h2>
-        <div id="saves-list" class="card-list">
+      <!-- Cloud Sync -->
+      <div id="cloud-sync-panel" class="cloud-sync-panel hidden">
+        <div class="sync-step" id="sync-step-email">
+          <input type="email" id="sync-email" placeholder="Cync account email" autocomplete="email">
+          <button id="sync-otp-btn" class="sync-btn">Send OTP</button>
+        </div>
+        <div class="sync-step hidden" id="sync-step-auth">
+          <input type="password" id="sync-password" placeholder="Password" autocomplete="current-password">
+          <input type="text" id="sync-otp" placeholder="OTP code" autocomplete="one-time-code">
+          <button id="sync-go-btn" class="sync-btn">Sync</button>
+        </div>
+        <div id="sync-status" class="sync-status hidden"></div>
+      </div>
+
+      <!-- Devices from cync_mesh.yaml -->
+      <section class="settings-section">
+        <div class="settings-header">
+          <h2>Devices</h2>
+          <div class="settings-actions">
+            <button id="cloud-sync-btn" class="settings-btn" title="Cloud Sync">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>
+            </button>
+            <button id="mesh-refresh-btn" class="settings-btn" title="Refresh">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            </button>
+            <button id="mesh-open-btn" class="settings-btn" title="Open file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="mesh-devices" class="settings-content">
           <p class="empty-msg">Loading...</p>
         </div>
       </section>
-      <section class="schedules-section">
-        <h2>Cloud Schedules</h2>
-        <p class="info-msg">Schedules are managed through the Cync mobile app and run via the cloud.</p>
+
+      <!-- Rooms config -->
+      <section class="settings-section">
+        <div class="settings-header">
+          <h2>Rooms</h2>
+          <div class="settings-actions">
+            <button id="rooms-refresh-btn" class="settings-btn" title="Refresh">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            </button>
+            <button id="rooms-open-btn" class="settings-btn" title="Open file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="rooms-config" class="settings-content">
+          <p class="empty-msg">Loading...</p>
+        </div>
+      </section>
+
+      <!-- Config.env -->
+      <section class="settings-section">
+        <div class="settings-header">
+          <h2>Configuration</h2>
+          <div class="settings-actions">
+            <button id="config-open-btn" class="settings-btn" title="Open file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="config-entries" class="settings-content">
+          <p class="empty-msg">Loading...</p>
+        </div>
       </section>
     </div>
   </div>

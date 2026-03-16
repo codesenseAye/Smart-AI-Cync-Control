@@ -15,8 +15,12 @@ function env(key: string, fallback?: string): string {
   return val;
 }
 
+function getRoomsPath(): string {
+  return process.env.ROOMS_JSON_PATH || join(__dirname, "..", "src", "data", "rooms.json");
+}
+
 function loadRoomsConfig(): RoomsConfig {
-  const roomsPath = process.env.ROOMS_JSON_PATH || join(__dirname, "..", "src", "data", "rooms.json");
+  const roomsPath = getRoomsPath();
   try {
     const raw = readFileSync(roomsPath, "utf-8");
     return JSON.parse(raw) as RoomsConfig;
@@ -26,7 +30,26 @@ function loadRoomsConfig(): RoomsConfig {
   }
 }
 
-export const config = Object.freeze({
+/** Reload rooms.json from disk at runtime. */
+export function reloadRooms(): RoomsConfig {
+  const roomsPath = getRoomsPath();
+  const raw = readFileSync(roomsPath, "utf-8");
+  const rooms = JSON.parse(raw) as RoomsConfig;
+  config.rooms = rooms;
+  console.log(`[config] Reloaded rooms.json (${Object.keys(rooms.rooms).length} rooms)`);
+  return rooms;
+}
+
+export const config: {
+  readonly port: number;
+  readonly apiKey: string;
+  readonly mqtt: { readonly brokerUrl: string; readonly username: string | undefined; readonly password: string | undefined; readonly topic: string };
+  readonly llm: { readonly model: string; readonly intentModel: string; readonly expressionModel: string; readonly complexModel: string };
+  readonly cyncLanIp: string;
+  readonly technitium: { readonly url: string; readonly username: string; readonly password: string };
+  readonly proxy: { readonly port: number; readonly cloudDomain: string; readonly cloudPort: number; readonly dnsServer: string };
+  rooms: RoomsConfig;
+} = {
   port: parseInt(env("LIGHTS_PORT", "3001"), 10),
   apiKey: env("API_KEY"),
 
@@ -60,6 +83,6 @@ export const config = Object.freeze({
   },
 
   rooms: loadRoomsConfig(),
-});
+};
 
 export type Config = typeof config;

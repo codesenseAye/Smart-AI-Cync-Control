@@ -2,7 +2,7 @@ import express from "express";
 import Database from "better-sqlite3";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { config } from "./config.js";
+import { config, reloadRooms } from "./config.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 import { mqttService } from "./services/mqtt.js";
@@ -43,6 +43,16 @@ app.use(requireApiKey);
 app.use(commandRouter);
 app.use(statusRouter);
 app.use(dnsRouter);
+
+// Reload rooms.json from disk
+app.post("/reload-rooms", (_req, res) => {
+  try {
+    const rooms = reloadRooms();
+    res.json({ ok: true, roomCount: Object.keys(rooms.rooms).length });
+  } catch (e: any) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 // --- Bootstrap ---
 async function start() {

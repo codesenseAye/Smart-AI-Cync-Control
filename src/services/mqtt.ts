@@ -10,6 +10,7 @@ type CommandHandler = (
 class MqttService {
   private client: mqtt.MqttClient | null = null;
   private stateCache = new Map<string, DeviceState>();
+  private lastEmittedState = new Map<string, { json: string; ts: number }>();
   private connected = false;
   private topicPrefix: string;
   private commandHandler: CommandHandler | null = null;
@@ -101,17 +102,23 @@ class MqttService {
           this.stateCache.set(deviceId, { state: payload });
         }
       }
-    } else if (parts[1] === "set" && this.commandHandler) {
+    } else if (parts[1] === "set") {
       const deviceId = parts[2];
       if (!deviceId || !deviceId.includes("-")) return;
 
-      // Extract numeric device ID (after the dash)
-      const numericId = parseInt(deviceId.split("-")[1], 10);
-      if (isNaN(numericId)) return;
-
       try {
         const command = JSON.parse(payload);
-        this.commandHandler(numericId, command);
+
+        // Emit structured event for desktop app
+        console.log(`@@EVENT:${JSON.stringify({ kind: "command", deviceId, data: command })}`);
+
+        // Route to proxy for command injection
+        if (this.commandHandler) {
+          const numericId = parseInt(deviceId.split("-")[1], 10);
+          if (!isNaN(numericId)) {
+            this.commandHandler(numericId, command);
+          }
+        }
       } catch {
         console.warn(`[mqtt] Failed to parse set command for ${deviceId}`);
       }
@@ -131,9 +138,20 @@ class MqttService {
 
   /** Publish device state (used by proxy to report status from parsed packets). */
   publishState(deviceId: string, state: Record<string, unknown>): void {
+    const msg = JSON.stringify(state);
+
+    // Emit structured event for desktop app
+    // Dedup within 10s window: periodic broadcasts don't spam, but state changes
+    // and fresh connections always get through (avoids race with renderer startup)
+    const prev = this.lastEmittedState.get(deviceId);
+    const now = Date.now();
+    if (!prev || prev.json !== msg || now - prev.ts > 10_000) {
+      this.lastEmittedState.set(deviceId, { json: msg, ts: now });
+      console.log(`@@EVENT:${JSON.stringify({ kind: "status", deviceId, data: state })}`);
+    }
+
     if (!this.client || !this.connected) return;
     const topic = `${this.topicPrefix}/status/${deviceId}`;
-    const msg = JSON.stringify(state);
     this.client.publish(topic, msg, { retain: true });
   }
 

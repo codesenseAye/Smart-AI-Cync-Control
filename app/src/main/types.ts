@@ -11,6 +11,12 @@ export interface ServerLogEvent {
   stream: "stdout" | "stderr";
 }
 
+export interface DeviceEvent {
+  kind: "status" | "command";
+  deviceId: string;
+  data: Record<string, unknown>;
+}
+
 export interface CommandResult {
   ok: boolean;
   interpreted?: unknown;

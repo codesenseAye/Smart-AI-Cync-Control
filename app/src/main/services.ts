@@ -38,6 +38,11 @@ export class ServiceManager {
     this.wrapperServer.onLog((line, stream) => {
       this.sendToRenderer("server:log", { line, stream });
     });
+
+    // Wire device events to renderer
+    this.wrapperServer.onDeviceEvent((event) => {
+      this.sendToRenderer("device:event", event);
+    });
   }
 
   setWindow(win: BrowserWindow): void {

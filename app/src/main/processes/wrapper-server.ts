@@ -18,6 +18,9 @@ export class WrapperServerService implements ManagedService {
   private configEnv: Record<string, string>;
   private devProjectRoot: string;
   private logCallback?: (line: string, stream: "stdout" | "stderr") => void;
+  private eventCallback?: (event: Record<string, unknown>) => void;
+  private stdoutBuf = "";
+  private stderrBuf = "";
 
   constructor(
     port: number,
@@ -43,6 +46,10 @@ export class WrapperServerService implements ManagedService {
     this.logCallback = cb;
   }
 
+  onDeviceEvent(cb: (event: Record<string, unknown>) => void): void {
+    this.eventCallback = cb;
+  }
+
   private setStatus(s: ServiceStatus, detail?: string): void {
     this._status = s;
     this._listener?.(s, detail);
@@ -62,22 +69,42 @@ export class WrapperServerService implements ManagedService {
       this.startDev();
     }
 
-    // Pipe stdout/stderr to log callback
+    // Pipe stdout/stderr to log callback (with line buffering)
     this.child!.stdout?.on("data", (data) => {
-      const lines = data.toString().split("\n").filter((l: string) => l.trim());
-      for (const line of lines) {
-        this.logCallback?.(line, "stdout");
+      this.stdoutBuf += data.toString();
+      const parts = this.stdoutBuf.split("\n");
+      this.stdoutBuf = parts.pop() || ""; // keep incomplete trailing line
+      for (const raw of parts) {
+        const line = raw.trim();
+        if (!line) continue;
+        if (line.startsWith("@@EVENT:")) {
+          try {
+            const event = JSON.parse(line.slice(8));
+            this.eventCallback?.(event);
+          } catch { /* ignore malformed events */ }
+        } else {
+          this.logCallback?.(line, "stdout");
+        }
       }
     });
 
     this.child!.stderr?.on("data", (data) => {
-      const lines = data.toString().split("\n").filter((l: string) => l.trim());
-      for (const line of lines) {
+      this.stderrBuf += data.toString();
+      const parts = this.stderrBuf.split("\n");
+      this.stderrBuf = parts.pop() || "";
+      for (const raw of parts) {
+        const line = raw.trim();
+        if (!line) continue;
         this.logCallback?.(line, "stderr");
       }
     });
 
     this.child!.on("exit", (code) => {
+      // Flush remaining buffered output
+      if (this.stdoutBuf.trim()) this.logCallback?.(this.stdoutBuf.trim(), "stdout");
+      if (this.stderrBuf.trim()) this.logCallback?.(this.stderrBuf.trim(), "stderr");
+      this.stdoutBuf = "";
+      this.stderrBuf = "";
       this.child = null;
       if (this._status !== "stopping") {
         this.setStatus("error", `Server exited with code ${code}`);

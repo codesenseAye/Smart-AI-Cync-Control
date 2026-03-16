@@ -14,6 +14,7 @@ export const DATA_PATHS = {
   configEnv: join(DATA_DIR, "config.env"),
   roomsJson: join(DATA_DIR, "rooms.json"),
   stateDb: join(DATA_DIR, "state.db"),
+  cyncMesh: join(DATA_DIR, "cync-lan", "config", "cync_mesh.yaml"),
 } as const;
 
 /** Directory containing configs bundled at build time (inside extraResources) */
