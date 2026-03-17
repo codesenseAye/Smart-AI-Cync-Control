@@ -26,7 +26,7 @@
 
 .status-dot.stopped { background: var(--text-faint); }
 .status-dot.starting { background: var(--warning); animation: pulse 1s infinite; }
-.status-dot.running { background: var(--success); }
+.status-dot.running { background: var(--accent); }
 .status-dot.stopping { background: var(--warning); animation: pulse 1s infinite; }
 .status-dot.error { background: var(--error-border); }
 

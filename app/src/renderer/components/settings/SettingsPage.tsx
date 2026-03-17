@@ -11,20 +11,23 @@ export function SettingsPage() {
 
   const handleSyncComplete = useCallback(() => {
     setReloadKey((k) => k + 1);
-    setTimeout(() => setSyncVisible(false), 2000);
   }, []);
 
   return (
     <div className="settings-page">
       <div className="container">
-        <CloudSyncPanel visible={syncVisible} onSyncComplete={handleSyncComplete} />
         <DevicesSection
-          onCloudSync={() => setSyncVisible((v) => !v)}
+          onCloudSync={() => setSyncVisible(true)}
           reloadKey={reloadKey}
         />
         <RoomsSection reloadKey={reloadKey} />
         <ConfigSection />
       </div>
+      <CloudSyncPanel
+        visible={syncVisible}
+        onClose={() => setSyncVisible(false)}
+        onSyncComplete={handleSyncComplete}
+      />
     </div>
   );
 }

@@ -1,58 +1,394 @@
-.cloud-sync-panel {
+/* ── Overlay ── */
+.cs-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 15, 0);
+  backdrop-filter: blur(0px);
+  transition: background 0.25s ease, backdrop-filter 0.25s ease;
+  pointer-events: none;
+}
+
+.cs-overlay--visible {
+  background: rgba(5, 5, 15, 0.7);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+/* ── Modal Card ── */
+.cs-modal {
+  position: relative;
+  width: 380px;
+  max-height: 90vh;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin-bottom: 4px;
-  flex-shrink: 0;
+  border-radius: 12px;
+  padding: 28px 24px 24px;
+  overflow-y: auto;
+  opacity: 0;
+  transform: translateY(12px) scale(0.97);
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
-.sync-step {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 6px;
+.cs-modal--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
-.sync-step input {
-  flex: 1;
-  padding: 6px 10px;
-  border: 1px solid var(--border-dim);
+/* ── Close Button ── */
+.cs-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px;
   border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.cs-close:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Header ── */
+.cs-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.cs-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 212, 255, 0.12);
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.cs-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 4px;
+}
+
+.cs-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── Step Indicator ── */
+.cs-steps {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 0 8px;
+  position: relative;
+}
+
+.cs-step-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  z-index: 1;
+}
+
+.cs-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--border-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.cs-step-dot--active .cs-dot {
+  background: var(--accent);
+  color: #fff;
+}
+
+.cs-step-dot--done .cs-dot {
+  background: var(--success);
+  color: #fff;
+}
+
+.cs-step-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  transition: color 0.3s ease;
+}
+
+.cs-step-dot--active .cs-step-label {
+  color: var(--text-secondary);
+}
+
+.cs-step-line {
+  position: absolute;
+  top: 11px;
+  left: 28px;
+  right: 28px;
+  height: 2px;
+  background: var(--border-dim);
+  z-index: 0;
+}
+
+.cs-step-line-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 1px;
+  transition: width 0.4s ease, background 0.4s ease;
+}
+
+.cs-step-line-fill--done {
+  background: var(--success);
+}
+
+/* ── Body / Panes ── */
+.cs-body {}
+
+.cs-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cs-pane--center {
+  align-items: center;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.cs-pane--enter {
+  animation: cs-fade-up 0.3s ease both;
+}
+
+@keyframes cs-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Inputs ── */
+.cs-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cs-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius);
   background: var(--bg-input);
   color: var(--text-primary);
   font-size: 13px;
   outline: none;
+  transition: border-color 0.15s;
 }
 
-.sync-step input:focus {
+.cs-input:focus {
   border-color: var(--accent);
 }
 
-.sync-step input::placeholder {
+.cs-input::placeholder {
   color: var(--text-dim);
 }
 
-.sync-btn {
-  padding: 6px 14px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: #fff;
+.cs-hint {
   font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.cs-hint strong {
+  color: var(--text-secondary);
+}
+
+/* ── Error ── */
+.cs-error {
+  font-size: 12px;
+  color: var(--error-text);
+  background: var(--error-bg);
+  border: 1px solid rgba(255, 23, 68, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+
+/* ── Buttons ── */
+.cs-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s, opacity 0.15s;
 }
 
-.sync-btn:hover { background: var(--accent-hover); }
-.sync-btn:disabled { background: var(--border-dim); cursor: not-allowed; }
+.cs-btn--primary {
+  background: var(--accent);
+  color: #fff;
+  margin-top: 4px;
+}
 
-.sync-status {
+.cs-btn--primary:hover {
+  background: var(--accent-hover);
+}
+
+.cs-btn--primary:disabled {
+  background: var(--border-dim);
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
+.cs-btn--ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.cs-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
+/* ── Spinner ── */
+.cs-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: cs-spin 0.6s linear infinite;
+}
+
+@keyframes cs-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Syncing Animation ── */
+.cs-sync-animation {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.cs-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: cs-pulse 2s ease-out infinite;
+}
+
+.cs-pulse-ring--delayed {
+  animation-delay: 0.8s;
+}
+
+@keyframes cs-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+.cs-sync-icon {
+  color: var(--accent);
+  animation: cs-float 2s ease-in-out infinite;
+}
+
+@keyframes cs-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.cs-sync-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cs-sync-subtext {
   font-size: 12px;
-  padding: 4px 0;
+  color: var(--text-muted);
 }
 
-.sync-status.sync-info { color: var(--accent); }
-.sync-status.sync-error { color: var(--error-text); }
+/* ── Result ── */
+.cs-result-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.cs-result-icon--success {
+  background: rgba(0, 200, 83, 0.12);
+  color: var(--success);
+}
+
+.cs-result-icon--error {
+  background: rgba(255, 23, 68, 0.12);
+  color: var(--error-text);
+}
+
+.cs-result-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cs-result-detail {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cs-result-detail--error {
+  color: var(--error-text);
+}

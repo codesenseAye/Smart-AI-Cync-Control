@@ -98,7 +98,7 @@
 }
 
 .settings-table tbody tr:hover {
-  background: rgba(92, 124, 250, 0.05);
+  background: rgba(0, 212, 255, 0.05);
 }
 
 .cap-yes { color: var(--success); }
@@ -169,5 +169,5 @@
 
 .room-card.drag-over {
   border-color: var(--accent);
-  background: rgba(92, 124, 250, 0.06);
+  background: rgba(0, 212, 255, 0.06);
 }

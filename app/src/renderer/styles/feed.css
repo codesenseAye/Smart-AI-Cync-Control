@@ -43,7 +43,7 @@
 }
 
 .event-badge.sent {
-  background: rgba(92, 124, 250, 0.12);
+  background: rgba(0, 212, 255, 0.12);
   color: var(--accent);
 }
 
