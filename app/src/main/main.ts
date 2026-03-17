@@ -1,4 +1,10 @@
-import { app, BrowserWindow, nativeImage, dialog } from "electron";
+import {
+  app,
+  BrowserWindow,
+  Menu,
+  nativeImage,
+  dialog,
+} from "electron";
 import path from "node:path";
 import { ensureDataDir, DATA_DIR } from "./data-dir";
 import { loadConfig } from "./env-loader";
@@ -37,7 +43,6 @@ function createWindow(): void {
   });
 
   mainWindow.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
-  mainWindow.setMenuBarVisibility(false);
 
   services.setWindow(mainWindow);
 
@@ -47,6 +52,8 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
+  Menu.setApplicationMenu(null);
+
   createWindow();
   registerIpcHandlers(services, config);
 

@@ -31,11 +31,13 @@
       }
     ],
     "win": {
-      "target": "portable",
+      "target": "nsis",
       "icon": "assets/smart-cync-ai-control-logo.png"
     },
-    "portable": {
-      "artifactName": "${productName}.exe"
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
     }
   },
   "devDependencies": {

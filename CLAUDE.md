@@ -278,7 +278,7 @@ Restart the PC. This restores Windows DNS defaults and stops Technitium from aut
 - React 19 + TypeScript for the renderer UI
 - esbuild bundles the React renderer (JSX + CSS)
 - `tsc` compiles main process and preload only (renderer excluded)
-- electron-builder for portable Windows .exe packaging
+- electron-builder with NSIS target for Windows installer packaging
 
 ## Build & Run
 
@@ -293,12 +293,12 @@ npx tsc --noEmit     # type check only
 cd app
 npm run build        # tsc (main+preload) + esbuild (React renderer) + copy HTML
 npm run dev          # build + launch Electron
-npm run release      # build + bundle server + electron-builder portable .exe
+npm run release      # build + bundle server + electron-builder NSIS installer
 
 # From root
 npm run app:dev      # shortcut for cd app && npm run dev
 npm run app:build    # shortcut for cd app && npm run build
-npm run app:release  # builds server first, then app release
+npm run app:release  # builds server first, then app installer
 ```
 
 The `rooms.json` config is loaded from `src/data/rooms.json` at startup.
@@ -309,7 +309,7 @@ The `rooms.json` config is loaded from `src/data/rooms.json` at startup.
 2. `scripts/build-renderer.js` uses esbuild to bundle `app/src/renderer/index.tsx` into `app/dist/renderer/renderer.js` + `renderer.css` (JSX automatic transform, CSS imports bundled)
 3. `scripts/copy-static.js` copies `index.html` to `app/dist/renderer/`
 4. For release: `scripts/bundle-server.js` bundles the compiled server into `app/dist/server/bundle.cjs`
-5. electron-builder packages everything into a portable `.exe` in `app/release/`
+5. electron-builder packages everything into an NSIS installer in `app/release/`
 
 ## Boot Sequence
 

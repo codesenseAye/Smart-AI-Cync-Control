@@ -35,7 +35,7 @@ The proxy also reads status packets from the device stream and publishes them to
 - **TLS relay proxy** — transparent MITM keeps cloud + mobile app working alongside local control
 - **DNS override** — network-wide Cync domain redirect via Technitium DNS Server
 - **Electron desktop app** — React UI that auto-manages Mosquitto, LM Studio, and the server
-- **Portable exe** — single-file Windows executable, no install required
+- **Windows installer** — NSIS installer, installs per-user with Start Menu shortcut
 
 ## Prerequisites
 
@@ -111,11 +111,11 @@ The Electron app uses React 19 + TypeScript for the UI, bundled with esbuild.
 cd app
 npm run build        # compile main process (tsc) + bundle React renderer (esbuild)
 npm run dev          # build + launch Electron
-npm run release      # build + bundle server + package portable .exe
+npm run release      # build + bundle server + package NSIS installer
 
 # Or from root:
 npm run app:dev      # build + launch
-npm run app:release  # full release build (server + app + .exe)
+npm run app:release  # full release build (server + app + installer)
 ```
 
 The app manages three services automatically:
