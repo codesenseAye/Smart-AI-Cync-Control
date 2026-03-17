@@ -6,11 +6,11 @@
   "private": true,
   "main": "dist/main/main.js",
   "scripts": {
-    "build": "tsc && node scripts/copy-static.js",
+    "build": "tsc && node scripts/build-renderer.js && node scripts/copy-static.js",
     "build:server": "node scripts/bundle-server.js",
     "dev": "npm run build && electron .",
     "start": "electron .",
-    "watch": "tsc -w",
+    "watch": "tsc -w & node scripts/build-renderer.js",
     "pack": "npm run build && npm run build:server && electron-builder --dir",
     "release": "npm run build && npm run build:server && electron-builder"
   },
@@ -40,9 +40,15 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
-    "esbuild": "^0.25.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "electron": "^35.0.0",
     "electron-builder": "^26.0.0",
+    "esbuild": "^0.25.0",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }

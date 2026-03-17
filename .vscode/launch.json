@@ -10,7 +10,10 @@
       "cwd": "${workspaceFolder}/app",
       "preLaunchTask": "app:build",
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/app/dist/**/*.js"],
+      "outFiles": [
+        "${workspaceFolder}/app/dist/main/**/*.js",
+        "${workspaceFolder}/app/dist/preload/**/*.js"
+      ],
       "console": "integratedTerminal"
     },
     {

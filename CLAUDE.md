@@ -88,7 +88,6 @@ The TLS proxy acts as a transparent MITM relay between Cync devices and the real
 | **MQTT** | `src/services/mqtt.ts` | Connects to MQTT broker, subscribes to `cync_lan/status/#` and `cync_lan/set/#`. Maintains in-memory device state cache. Routes set commands through the proxy. |
 | **Executor** | `src/services/executor.ts` | Takes a `ParsedCommand`, resolves room -> device IDs, dispatches to the appropriate handler. Central command router. |
 | **Effects** | `src/services/effects.ts` | Runs timed MQTT sequences for complex animations (e.g. "red slow flash"). Uses `AbortController` for cancellation. One active effect per device. Min step: 250ms. |
-| **Saves** | `src/services/saves.ts` | SQLite. Stores saved device states by name. Recall replays the stored states. |
 | **Protocol** | `src/services/protocol.ts` | Cync binary protocol parser and command builder. |
 | **Proxy** | `src/services/proxy.ts` | Transparent TLS MITM relay between Cync devices and cloud. Parses status, injects commands. |
 | **DNS** | `src/services/dns.ts` | Manages Technitium DNS Server zones to redirect Cync cloud domains to the local proxy network-wide. |
@@ -100,7 +99,6 @@ The TLS proxy acts as a transparent MITM relay between Cync devices and the real
 | `POST` | `/command` | Main voice command endpoint. Body: `{"text": "..."}`. Returns parsed interpretation + execution result. |
 | `GET` | `/status` | Current device states from MQTT cache + proxy info |
 | `GET` | `/devices` | Room-to-device mapping from rooms.json |
-| `GET` | `/saves` | List saved presets |
 | `POST` | `/dns/enable` | Enable DNS override (redirects Cync cloud domains to `CYNC_LAN_IP`) |
 | `POST` | `/dns/disable` | Disable DNS override (restores normal DNS) |
 | `GET` | `/dns/status` | Check if DNS override is active |
@@ -110,7 +108,7 @@ All routes except `/health` require `Authorization: Bearer <API_KEY>` header.
 
 ## Command Types
 
-The LLM parses voice text into one of 5 command types (discriminated union on `type` field):
+The LLM parses voice text into one of 4 command types (discriminated union on `type` field):
 
 | Type | Example Voice Input | LLM Output |
 |---|---|---|
@@ -118,7 +116,6 @@ The LLM parses voice text into one of 5 command types (discriminated union on `t
 | `simple` | "kitchen warm dim", "bedroom red", "bright cool" | `{"type":"simple","room":"kitchen","brightness":25,"color_temp_kelvin":2700}` |
 | `effect` | "kitchen rainbow", "candle", "bedroom aurora" | `{"type":"effect","room":"kitchen","effect":"rainbow"}` |
 | `complex` | "red slow flash", "blue pulse every 2 seconds" | `{"type":"complex","room":"all","sequence":[...],"repeat":true,"transition_style":"fade"}` |
-| `recall` | "chill", "recall relax" | `{"type":"recall","name":"chill"}` |
 
 ### Color/Brightness Shortcuts in System Prompt
 
@@ -268,32 +265,55 @@ Restart the PC. This restores Windows DNS defaults and stops Technitium from aut
 
 ## Tech Stack
 
+### Server (`/src`)
 - TypeScript (ES2022, ESM modules via `"type": "module"`)
 - Express.js for HTTP
 - `@lmstudio/sdk` for local LLM inference (auto-discovers LM Studio)
 - `mqtt` for MQTT pub/sub
-- `better-sqlite3` for saves persistence (WAL mode)
 - `selfsigned` for auto-generating TLS certificates
 - `zod` for LLM output validation
+
+### Desktop App (`/app`)
+- Electron 35 (main + preload + renderer process model)
+- React 19 + TypeScript for the renderer UI
+- esbuild bundles the React renderer (JSX + CSS)
+- `tsc` compiles main process and preload only (renderer excluded)
+- electron-builder for portable Windows .exe packaging
 
 ## Build & Run
 
 ```bash
+# Server
 npm run dev          # tsx watch (auto-reload on changes)
 npm run build        # tsc -> dist/
 npm start            # node dist/index.js
+npx tsc --noEmit     # type check only
 
-# Type check only
-npx tsc --noEmit
+# Desktop App
+cd app
+npm run build        # tsc (main+preload) + esbuild (React renderer) + copy HTML
+npm run dev          # build + launch Electron
+npm run release      # build + bundle server + electron-builder portable .exe
+
+# From root
+npm run app:dev      # shortcut for cd app && npm run dev
+npm run app:build    # shortcut for cd app && npm run build
+npm run app:release  # builds server first, then app release
 ```
 
-SQLite database is created at `src/data/state.db` (gitignored). The `rooms.json` config is loaded from `src/data/rooms.json` at startup.
+The `rooms.json` config is loaded from `src/data/rooms.json` at startup.
+
+### Desktop App Build Pipeline
+
+1. `tsc` compiles `app/src/main/` and `app/src/preload/` to `app/dist/` (CommonJS)
+2. `scripts/build-renderer.js` uses esbuild to bundle `app/src/renderer/index.tsx` into `app/dist/renderer/renderer.js` + `renderer.css` (JSX automatic transform, CSS imports bundled)
+3. `scripts/copy-static.js` copies `index.html` to `app/dist/renderer/`
+4. For release: `scripts/bundle-server.js` bundles the compiled server into `app/dist/server/bundle.cjs`
+5. electron-builder packages everything into a portable `.exe` in `app/release/`
 
 ## Boot Sequence
 
-1. SQLite database init (creates tables for saves)
-2. Saves service init
-3. MQTT connect + subscribe to status and set topics (non-fatal if broker unavailable)
-4. LM Studio SDK init (non-fatal if LM Studio not running)
-5. TLS relay proxy start — resolves cloud IP via external DNS, generates self-signed cert (non-fatal)
-6. Express HTTP server start on `LIGHTS_PORT`
+1. MQTT connect + subscribe to status and set topics (non-fatal if broker unavailable)
+2. LM Studio SDK init (non-fatal if LM Studio not running)
+3. TLS relay proxy start — resolves cloud IP via external DNS, generates self-signed cert (non-fatal)
+4. Express HTTP server start on `LIGHTS_PORT`

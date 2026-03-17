@@ -15,11 +15,11 @@
     "test:llm": "tsx --test tests/llm.test.ts",
     "app:dev": "cd app && npm run dev",
     "app:build": "cd app && npm run build",
-    "app:start": "cd app && npm run start"
+    "app:start": "cd app && npm run start",
+    "app:release": "npm run build && cd app && npm run release"
   },
   "dependencies": {
     "@lmstudio/sdk": "^1.5.0",
-    "better-sqlite3": "^11.7.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mqtt": "^4.3.8",
@@ -28,7 +28,6 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.0",
     "@types/node": "^22.15.3",
     "tsx": "^4.19.4",

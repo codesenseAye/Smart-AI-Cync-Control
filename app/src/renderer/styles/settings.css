@@ -1,0 +1,173 @@
+.settings-page > .container {
+  overflow: hidden;
+}
+
+.settings-section {
+  flex-shrink: 0;
+}
+
+.settings-section:last-child {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-section:last-child .settings-content {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.settings-header h2 {
+  margin-bottom: 0;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn {
+  background: none;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.3s, color 0.3s;
+}
+
+.icon-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.icon-btn.refreshing {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.icon-btn.refreshing svg {
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.settings-content {
+  overflow-y: auto;
+  max-height: 250px;
+}
+
+.settings-table {
+  width: 100%;
+  overflow-y:visible;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.settings-table thead th {
+  text-align: left;
+  padding: 6px 8px;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-table tbody td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--bg-primary);
+  color: var(--text-secondary);
+}
+
+.settings-table tbody tr:hover {
+  background: rgba(92, 124, 250, 0.05);
+}
+
+.cap-yes { color: var(--success); }
+.cap-no { color: var(--text-faint); }
+
+.config-table .config-key {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.config-table .config-val {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.room-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+
+.room-card-header {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-aliases {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.room-devices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.room-device-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-dim);
+  color: #aaa;
+  cursor: grab;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.room-device-chip:active {
+  cursor: grabbing;
+}
+
+.room-device-chip.dragging {
+  opacity: 0.4;
+}
+
+.room-card.drag-over {
+  border-color: var(--accent);
+  background: rgba(92, 124, 250, 0.06);
+}

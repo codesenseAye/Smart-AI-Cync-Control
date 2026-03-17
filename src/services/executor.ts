@@ -1,10 +1,6 @@
 import { config } from "../config.js";
-import type {
-  ParsedCommand,
-  SavedDeviceState,
-} from "../types/index.js";
+import type { ParsedCommand } from "../types/index.js";
 import { mqttService } from "./mqtt.js";
-import { savesService } from "./saves.js";
 import { cancelDeviceEffects, runEffect } from "./effects.js";
 
 export async function execute(command: ParsedCommand): Promise<{ ok: boolean; detail: string }> {
@@ -32,9 +28,6 @@ export async function execute(command: ParsedCommand): Promise<{ ok: boolean; de
         command.transition_style,
         command.device_ids
       );
-
-    case "recall":
-      return executeRecall(command.name);
 
     default:
       return { ok: false, detail: `Unknown command type: ${(command as ParsedCommand).type}` };
@@ -154,39 +147,4 @@ function executeComplex(
   };
 }
 
-function executeRecall(name: string): { ok: boolean; detail: string } {
-  const saved = savesService.recall(name);
-  if (!saved) {
-    return { ok: false, detail: `No saved shortcut found with name "${name}"` };
-  }
-
-  const deviceIds = saved.states.map((s) => s.device_id);
-  cancelDeviceEffects(deviceIds);
-
-  for (const s of saved.states) {
-    const payload = buildPayloadFromSavedState(s);
-    mqttService.publish(s.device_id, payload);
-  }
-
-  return {
-    ok: true,
-    detail: `Recalled "${name}": restored ${saved.states.length} devices`,
-  };
-}
-
-function buildPayloadFromSavedState(s: SavedDeviceState): Record<string, unknown> {
-  const payload: Record<string, unknown> = { state: s.state };
-
-  if (s.brightness !== undefined) {
-    payload.brightness = s.brightness;
-  }
-
-  if (s.color_mode === "rgb" && s.r !== undefined && s.g !== undefined && s.b !== undefined) {
-    payload.color = { r: s.r, g: s.g, b: s.b };
-  } else if (s.color_mode === "color_temp" && s.color_temp !== undefined) {
-    payload.color_temp = s.color_temp;
-  }
-
-  return payload;
-}
 

@@ -12,12 +12,20 @@ Return: {"rgb":<{"r":N,"g":N,"b":N} or null>,"brightness":<0-100 or null>,"color
 
 Rules:
 - "rgb": If any color is described or implied, choose the NEAREST palette color and output its EXACT RGB values. Use your own knowledge of color names and associations — you must decide which of the 8 palette entries is closest. NEVER output RGB values other than the 8 listed above. null if no color is mentioned.
-- "brightness": System scale 0-100 where dim≈25, half≈50, bright≈100. Interpret descriptions, moods, and contexts to determine the appropriate level. Complaints about current state mean the user wants the OPPOSITE (e.g. "too bright" → user wants lower brightness). null if no brightness is mentioned or implied.
-- "color_temp_kelvin": Warm light ≈ 2700K, cool/blue-white light ≈ 5500K, daylight ≈ 6500K. Interpret moods and contexts. Complaints mean the user wants the OPPOSITE. null if not implied. NEVER set BOTH rgb AND color_temp_kelvin.
+- "brightness": Scale 0-100. Use these EXACT mappings for keywords:
+  - "bright" / "full" / "max" = 100
+  - "half" / "medium" / "moderate" = 50
+  - "dim" / "low" / "soft" = 25
+  - "super dim" / "very dim" / "barely" = 10
+  When multiple keywords appear, each one controls its own parameter independently — "bright cool" means brightness=100 AND color_temp=5500K. Do NOT let one keyword override another.
+  For complaints: "too bright" / "too harsh" → 25, "can't see" / "too dark" → 100.
+  null if no brightness is mentioned or implied.
+- "color_temp_kelvin": Warm light = 2700K, cool/blue-white light = 5500K, daylight = 6500K, neutral/white = 4000K. Interpret moods and contexts. Complaints mean the user wants the OPPOSITE (e.g. "too harsh" → 2700K). null if not implied. NEVER set BOTH rgb AND color_temp_kelvin.
 - "animation_pattern": Only for repeating light patterns — "slow_flash" (slow blink), "fast_flash" (rapid/strobe), "flash" (normal blink), "pulse" (smooth fade in/out). Interpret animation-related words using your own knowledge. null unless animation is clearly described.
 - "effect_name": Factory effect if mentioned: ${FACTORY_EFFECTS.join(", ")}. Use underscores for multi-word names. null if none.
 
 CRITICAL: Only extract what is actually mentioned or clearly implied. If no light parameters are present, return ALL null values.
+CRITICAL: Each keyword controls its own parameter independently. "bright cool" = brightness:100 + color_temp:5500. "dim warm" = brightness:25 + color_temp:2700. Never conflate brightness keywords with color temperature keywords.
 
 Examples:
 "warm" → {"rgb":null,"brightness":null,"color_temp_kelvin":2700,"animation_pattern":null,"effect_name":null}

@@ -1,9 +1,10 @@
 import { app } from "electron";
 import { ChildProcess, spawn } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { ManagedService, ServiceStatus } from "../types";
-import { DATA_PATHS } from "../data-dir";
+import { DATA_DIR, DATA_PATHS } from "../data-dir";
 
 const HEALTH_TIMEOUT_MS = 60_000;
 const HEALTH_POLL_MS = 2_000;
@@ -130,19 +131,27 @@ export class WrapperServerService implements ManagedService {
 
   /** Production: run the esbuild bundle with system node */
   private startBundled(): void {
-    const serverDir = path.join(process.resourcesPath, "server");
-    const bundlePath = path.join(serverDir, "bundle.cjs");
-    const depsPath = path.join(serverDir, "deps");
+    // The portable exe extracts to a temp dir that Windows may clean up between
+    // launches (especially when pinned to the taskbar). Copy the server bundle
+    // to the persistent data dir so it survives temp cleanup.
+    const persistentServerDir = path.join(DATA_DIR, "server");
+    mkdirSync(persistentServerDir, { recursive: true });
+    const bundlePath = path.join(persistentServerDir, "bundle.cjs");
+
+    const resourceBundle = path.join(process.resourcesPath, "server", "bundle.cjs");
+    if (existsSync(resourceBundle)) {
+      copyFileSync(resourceBundle, bundlePath);
+    }
+
+    if (!existsSync(bundlePath)) {
+      throw new Error(`Server bundle not found at ${bundlePath}`);
+    }
 
     // Build env: pass all config.env vars + data dir paths to the server
-    // NODE_PATH tells Node where to find better-sqlite3 (renamed from node_modules
-    // because electron-builder filters out node_modules from extraResources)
     const env: Record<string, string> = {
       ...(process.env as Record<string, string>),
       ...this.configEnv,
       ROOMS_JSON_PATH: DATA_PATHS.roomsJson,
-      DB_PATH: DATA_PATHS.stateDb,
-      NODE_PATH: depsPath,
     };
 
     this.child = spawn("node", [bundlePath], {
@@ -158,7 +167,6 @@ export class WrapperServerService implements ManagedService {
       ...(process.env as Record<string, string>),
       ...this.configEnv,
       ROOMS_JSON_PATH: DATA_PATHS.roomsJson,
-      DB_PATH: DATA_PATHS.stateDb,
     };
 
     this.child = spawn("npx", ["tsx", "watch", "src/index.ts"], {

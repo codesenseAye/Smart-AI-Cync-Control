@@ -1,0 +1,28 @@
+.logs-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.log-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-dark);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log-stderr {
+  color: var(--error-text);
+}
+
+.log-stdout {
+  color: #c0c0c0;
+}

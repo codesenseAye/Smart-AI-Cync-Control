@@ -1,0 +1,61 @@
+.command-section {
+  flex-shrink: 0;
+}
+
+.command-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.command-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 15px;
+  outline: none;
+}
+
+.command-input:focus {
+  border-color: var(--accent);
+}
+
+.command-input::placeholder {
+  color: var(--text-dim);
+}
+
+.send-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.send-btn:hover {
+  background: var(--accent-hover);
+}
+
+.send-btn:active {
+  background: var(--accent-active);
+}
+
+.send-btn:disabled {
+  background: var(--border-dim);
+  cursor: not-allowed;
+}
+
+.command-error {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+}

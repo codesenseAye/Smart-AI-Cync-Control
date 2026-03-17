@@ -3,12 +3,11 @@ import { z } from "zod";
 // --- Layer 1: LLM Intent Classification ---
 
 export interface LLMIntentResult {
-  intent: "power" | "simple" | "effect" | "complex" | "recall";
+  intent: "power" | "simple" | "effect" | "complex";
   room_mention: string | null;
   device_mention: string | null;
   power_state: "on" | "off" | null;
   keywords: string[];
-  save_name: string | null;
   raw_description: string | null;
 }
 
@@ -20,12 +19,11 @@ const optPowerState = z.union([z.enum(["on", "off"]), z.literal(""), z.null(), z
   .transform((v): "on" | "off" | null => (v === "on" || v === "off" ? v : null));
 
 export const intentResultSchema = z.object({
-  intent: z.enum(["power", "simple", "effect", "complex", "recall"]),
+  intent: z.enum(["power", "simple", "effect", "complex"]),
   room_mention: optStr,
   device_mention: optStr,
   power_state: optPowerState,
   keywords: z.array(z.string()).optional().default([]),
-  save_name: optStr,
   raw_description: optStr,
 });
 

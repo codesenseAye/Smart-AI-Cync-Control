@@ -3,7 +3,6 @@ import { config } from "../config.js";
 import { mqttService } from "../services/mqtt.js";
 import { getActiveEffectCount } from "../services/effects.js";
 import { proxyService } from "../services/proxy.js";
-import { savesService } from "../services/saves.js";
 
 export const statusRouter = Router();
 
@@ -43,8 +42,4 @@ statusRouter.get("/devices", (_req: Request, res: Response) => {
     rooms,
     all_devices: allDevices,
   });
-});
-
-statusRouter.get("/saves", (_req: Request, res: Response) => {
-  res.json(savesService.listAll());
 });

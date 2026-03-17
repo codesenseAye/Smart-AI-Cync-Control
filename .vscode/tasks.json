@@ -10,6 +10,27 @@
       },
       "group": "build",
       "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "app:build:release",
+      "type": "shell",
+      "command": "npm run release",
+      "options": {
+        "cwd": "${workspaceFolder}/app"
+      },
+      "group": "build",
+      "dependsOn": ["server:build"],
+      "problemMatcher": []
+    },
+    {
+      "label": "server:build",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": ["$tsc"]
     }
   ]
 }

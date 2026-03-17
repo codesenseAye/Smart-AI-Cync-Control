@@ -29,12 +29,12 @@ The proxy also reads status packets from the device stream and publishes them to
 ## Features
 
 - **Natural language control** — *"bedroom warm and dim"*, *"make it cozy"*, *"rainbow"*, *"kill the lights"*
-- **5 command types** — power, color/brightness, factory effects, complex animations, recall presets
+- **4 command types** — power, color/brightness, factory effects, complex animations
 - **Factory effects** — candle, cyber, rainbow, fireworks, volcanic, aurora, and more
 - **Custom animations** — flash, pulse, strobe, breathing with configurable timing
 - **TLS relay proxy** — transparent MITM keeps cloud + mobile app working alongside local control
 - **DNS override** — network-wide Cync domain redirect via Technitium DNS Server
-- **Electron desktop app** — auto-manages Mosquitto, LM Studio, and the server from a single UI
+- **Electron desktop app** — React UI that auto-manages Mosquitto, LM Studio, and the server
 - **Portable exe** — single-file Windows executable, no install required
 
 ## Prerequisites
@@ -93,7 +93,6 @@ Create a `.env` file in the project root:
 | `simple` | *"kitchen warm dim"*, *"bedroom red"* | Set brightness, color temp, or RGB |
 | `effect` | *"rainbow"*, *"candle"*, *"aurora"* | Activate a factory effect |
 | `complex` | *"red slow flash"*, *"blue pulse"* | Custom animation sequence |
-| `recall` | *"chill"*, *"recall relax"* | Recall a saved preset |
 
 ## Build & Run
 
@@ -106,8 +105,17 @@ npx tsc --noEmit     # type check only
 
 ### Desktop App
 
+The Electron app uses React 19 + TypeScript for the UI, bundled with esbuild.
+
 ```bash
-cd app && npm run release   # build portable .exe
+cd app
+npm run build        # compile main process (tsc) + bundle React renderer (esbuild)
+npm run dev          # build + launch Electron
+npm run release      # build + bundle server + package portable .exe
+
+# Or from root:
+npm run app:dev      # build + launch
+npm run app:release  # full release build (server + app + .exe)
 ```
 
 The app manages three services automatically:
@@ -124,7 +132,6 @@ All routes except `/health` require `Authorization: Bearer <API_KEY>`.
 | `POST` | `/command` | Voice command — `{"text": "..."}` |
 | `GET` | `/status` | Device states + proxy info |
 | `GET` | `/devices` | Room-to-device mapping |
-| `GET` | `/saves` | Saved presets |
 | `POST` | `/dns/enable` | Enable DNS override |
 | `POST` | `/dns/disable` | Disable DNS override |
 | `GET` | `/dns/status` | DNS override status |

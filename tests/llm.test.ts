@@ -17,7 +17,6 @@ interface Assertion {
   deviceIdsInclude?: number[];
   repeat?: boolean;
   transitionStyle?: "instant" | "fade";
-  recallName?: string;
 }
 
 interface TestCase {
@@ -78,12 +77,6 @@ const testCases: TestCase[] = [
   { input: "red slow flash", assert: { type: "complex", room: "all", repeat: true } },
   { input: "blue fast flash in the bedroom", assert: { type: "complex", room: "bedroom", repeat: true } },
   { input: "green pulse", assert: { type: "complex", room: "all", repeat: true, transitionStyle: "fade" } },
-
-  // --- Recall ---
-  { input: "recall chill", assert: { type: "recall", recallName: "chill" } },
-  { input: "load relax", assert: { type: "recall", recallName: "relax" } },
-  { input: "recall scp", assert: { type: "recall", recallName: "scp" } },
-  { input: "load movie", assert: { type: "recall", recallName: "movie" } },
 
   // --- Aliases ---
   { input: "bed off", assert: { type: "power", room: "bedroom", state: "OFF" } },
@@ -256,10 +249,6 @@ function assertCommand(result: ParsedCommand, expected: Assertion, input: string
     assert.equal(result.transition_style, expected.transitionStyle, `${label}: transition_style`);
   }
 
-  if (expected.recallName !== undefined) {
-    assert.ok(result.type === "recall", `${label}: expected recall type`);
-    assert.equal(result.name, expected.recallName, `${label}: recall name`);
-  }
 }
 
 // --- Test runner ---

@@ -40,16 +40,10 @@ export interface EffectStep {
 // --- Parsed Command (discriminated union from LLM) ---
 
 export type ParsedCommand =
-  | RecallCommand
   | PowerCommand
   | SimpleCommand
   | EffectCommand
   | ComplexCommand;
-
-export interface RecallCommand {
-  type: "recall";
-  name: string;
-}
 
 export interface PowerCommand {
   type: "power";
@@ -100,11 +94,6 @@ const effectStepSchema = z.object({
 
 const deviceIdsSchema = z.array(z.number().int().positive()).optional().nullable().transform((v) => v ?? undefined);
 
-const recallSchema = z.object({
-  type: z.literal("recall"),
-  name: z.string().min(1).max(50),
-});
-
 const powerSchema = z.object({
   type: z.literal("power"),
   room: z.string().min(1),
@@ -138,32 +127,11 @@ const complexSchema = z.object({
 });
 
 export const parsedCommandSchema = z.discriminatedUnion("type", [
-  recallSchema,
   powerSchema,
   simpleSchema,
   effectSchema,
   complexSchema,
 ]);
-
-// --- Saved State (DB) ---
-
-export interface SavedDeviceState {
-  device_id: string;
-  state: "ON" | "OFF";
-  brightness?: number;
-  color_mode?: string;
-  color_temp?: number;
-  r?: number;
-  g?: number;
-  b?: number;
-}
-
-export interface SavedState {
-  name: string;
-  room: string;
-  states: SavedDeviceState[];
-  created_at: string;
-}
 
 // --- Factory Effects ---
 

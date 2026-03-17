@@ -1,0 +1,58 @@
+.cloud-sync-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.sync-step {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.sync-step input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+
+.sync-step input:focus {
+  border-color: var(--accent);
+}
+
+.sync-step input::placeholder {
+  color: var(--text-dim);
+}
+
+.sync-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sync-btn:hover { background: var(--accent-hover); }
+.sync-btn:disabled { background: var(--border-dim); cursor: not-allowed; }
+
+.sync-status {
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.sync-status.sync-info { color: var(--accent); }
+.sync-status.sync-error { color: var(--error-text); }

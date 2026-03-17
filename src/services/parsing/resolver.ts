@@ -124,15 +124,6 @@ function resolveRoomFromText(rawText: string): string {
   return "all";
 }
 
-// --- Recall Name Fallback from Raw Text ---
-
-const RECALL_NOISE = new Set(["recall", "load", "restore", "set", "to", "it", "the", "my"]);
-
-function extractRecallName(rawText: string): string | null {
-  const words = rawText.toLowerCase().trim().split(/\s+/).filter((w) => !RECALL_NOISE.has(w));
-  return words.length > 0 ? words.join(" ") : null;
-}
-
 // --- Main Resolver ---
 
 export function resolveCommand(
@@ -231,13 +222,6 @@ export function resolveCommand(
       return {
         needsRefinement: true,
         context: { type: "complex", room, device_ids, raw_description: intent.raw_description ?? rawText },
-      };
-    }
-
-    case "recall": {
-      return {
-        type: "recall",
-        name: intent.save_name ?? extractRecallName(rawText) ?? "unnamed",
       };
     }
 
