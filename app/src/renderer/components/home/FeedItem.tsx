@@ -1,5 +1,14 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import type { FeedItem as FeedItemType } from "../../types";
+
+function relativeTime(ts: number): string {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 5) return "just now";
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(ts).toLocaleTimeString();
+}
 
 function StatusPretty({ data }: { data: Record<string, unknown> }): ReactNode {
   const parts: ReactNode[] = [];
@@ -65,19 +74,50 @@ function SentPretty({ data }: { data: Record<string, unknown> }): ReactNode {
 
 interface FeedItemProps {
   item: FeedItemType;
+  onDismiss: (id: string) => void;
+  onReplay: (text: string) => void;
 }
 
-export function FeedItem({ item }: FeedItemProps) {
+export function FeedItem({ item, onDismiss, onReplay }: FeedItemProps) {
   const [showJson, setShowJson] = useState(false);
+  const [timeHovered, setTimeHovered] = useState(false);
+  const [, tick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="event-item">
       <div className="event-header">
         <span className={`event-badge ${item.kind}`}>{item.typeLabel}</span>
         <span className="event-label">{item.label}</span>
-        <span className="event-time">{item.timestamp}</span>
+        <span
+          className="event-time"
+          onMouseEnter={() => setTimeHovered(true)}
+          onMouseLeave={() => setTimeHovered(false)}
+        >
+          {timeHovered ? new Date(item.ts).toLocaleTimeString() : relativeTime(item.ts)}
+        </span>
+        {item.originalText && (
+          <button
+            className="event-replay"
+            onClick={() => onReplay(item.originalText!)}
+            title={`Replay: ${item.originalText}`}
+          >
+            Replay
+          </button>
+        )}
         <button className="event-toggle" onClick={() => setShowJson(!showJson)}>
           {showJson ? "Pretty" : "JSON"}
+        </button>
+        <button
+          className="event-dismiss"
+          onClick={() => onDismiss(item.id)}
+          title="Dismiss"
+        >
+          &times;
         </button>
       </div>
       {showJson ? (

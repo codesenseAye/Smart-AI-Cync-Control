@@ -11,14 +11,22 @@ import { useServerLogs } from "./hooks/useServerLogs";
 export function App() {
   const [activeTab, setActiveTab] = useState("home");
   const { resolveDeviceInfo } = useRoomsConfig();
-  const { items, addSentItem } = useDeviceEvents(resolveDeviceInfo);
+  const { items, addSentItem, clearItems, removeItem, paused, setPaused } =
+    useDeviceEvents(resolveDeviceInfo);
   const statuses = useServiceStatus();
   const { logs, logRef } = useServerLogs();
 
   return (
     <>
       <div className="page" style={{ display: activeTab === "home" ? "block" : "none" }}>
-        <HomePage items={items} onCommandSent={addSentItem} />
+        <HomePage
+          items={items}
+          onCommandSent={addSentItem}
+          onClear={clearItems}
+          onDismiss={removeItem}
+          paused={paused}
+          onPauseToggle={() => setPaused((p) => !p)}
+        />
       </div>
       <div className="page" style={{ display: activeTab === "server" ? "block" : "none" }}>
         <ServerPage statuses={statuses} logs={logs} logRef={logRef} />

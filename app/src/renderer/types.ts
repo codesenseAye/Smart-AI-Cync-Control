@@ -121,6 +121,7 @@ export interface FeedItem {
   label: string;
   data: Record<string, unknown>;
   typeLabel: string;
-  timestamp: string;
+  ts: number;
   command?: ParsedCommand;
+  originalText?: string;
 }

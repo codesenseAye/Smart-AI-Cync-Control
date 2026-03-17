@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import "../../styles/command.css";
 
 interface CommandInputProps {
-  onCommandSent: (interpreted: any) => void;
+  onCommandSent: (interpreted: any, originalText?: string) => void;
 }
 
 export function CommandInput({ onCommandSent }: CommandInputProps) {
@@ -36,7 +36,7 @@ export function CommandInput({ onCommandSent }: CommandInputProps) {
     try {
       const result = await window.api.sendCommand(trimmed);
       if (result.ok) {
-        if (result.interpreted) onCommandSent(result.interpreted);
+        if (result.interpreted) onCommandSent(result.interpreted, trimmed);
         setText("");
       } else {
         setError(result.error || "Unknown error");

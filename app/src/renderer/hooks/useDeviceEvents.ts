@@ -19,18 +19,30 @@ function deriveTypeLabel(data: Record<string, unknown>): string {
 
 export function useDeviceEvents(resolveDeviceInfo: (id: string) => { room: string; device: string }) {
   const [items, setItems] = useState<FeedItem[]>([]);
+  const [paused, setPaused] = useState(false);
   const subscribed = useRef(false);
   const resolveRef = useRef(resolveDeviceInfo);
+  const pausedRef = useRef(paused);
   resolveRef.current = resolveDeviceInfo;
+  pausedRef.current = paused;
 
   const addItem = useCallback((item: FeedItem) => {
+    if (pausedRef.current) return;
     setItems((prev) => {
       const next = [item, ...prev];
       return next.length > MAX_FEED_ITEMS ? next.slice(0, MAX_FEED_ITEMS) : next;
     });
   }, []);
 
-  const addSentItem = useCallback((interpreted: ParsedCommand) => {
+  const clearItems = useCallback(() => {
+    setItems([]);
+  }, []);
+
+  const removeItem = useCallback((id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
+  const addSentItem = useCallback((interpreted: ParsedCommand, originalText?: string) => {
     const room = interpreted.room || "all";
     const label = capitalize(room);
     const typeLabel = interpreted.type || "command";
@@ -40,8 +52,9 @@ export function useDeviceEvents(resolveDeviceInfo: (id: string) => { room: strin
       label,
       data: interpreted as unknown as Record<string, unknown>,
       typeLabel,
-      timestamp: new Date().toLocaleTimeString(),
+      ts: Date.now(),
       command: interpreted,
+      originalText,
     });
   }, [addItem]);
 
@@ -59,11 +72,11 @@ export function useDeviceEvents(resolveDeviceInfo: (id: string) => { room: strin
           label,
           data: event.data,
           typeLabel,
-          timestamp: new Date().toLocaleTimeString(),
+          ts: Date.now(),
         });
       });
     }
   }, [addItem]);
 
-  return { items, addSentItem };
+  return { items, addSentItem, clearItems, removeItem, paused, setPaused };
 }
