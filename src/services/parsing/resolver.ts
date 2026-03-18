@@ -11,37 +11,6 @@ const PATTERN_MAP: Record<string, { duration_ms: number; transition: "instant" |
   pulse:      { duration_ms: 1000, transition: "fade" },
 };
 
-// --- Palette Snapping ---
-// The expression LLM is told to output exact palette RGB values but doesn't always comply.
-// This code-level fix snaps any non-palette RGB to the nearest palette entry.
-
-const PALETTE: { r: number; g: number; b: number }[] = [
-  { r: 255, g: 0,   b: 0   },  // red
-  { r: 0,   g: 0,   b: 255 },  // blue
-  { r: 0,   g: 255, b: 0   },  // green
-  { r: 128, g: 0,   b: 255 },  // purple
-  { r: 255, g: 165, b: 0   },  // orange
-  { r: 255, g: 105, b: 180 },  // pink
-  { r: 0,   g: 128, b: 128 },  // teal
-  { r: 255, g: 255, b: 0   },  // yellow
-];
-
-function snapToPalette(rgb: { r: number; g: number; b: number }): { r: number; g: number; b: number } {
-  // If already a palette value, return as-is
-  if (PALETTE.some((p) => p.r === rgb.r && p.g === rgb.g && p.b === rgb.b)) return rgb;
-
-  let best = PALETTE[0];
-  let bestDist = Infinity;
-  for (const p of PALETTE) {
-    const dist = (rgb.r - p.r) ** 2 + (rgb.g - p.g) ** 2 + (rgb.b - p.b) ** 2;
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = p;
-    }
-  }
-  return { ...best };
-}
-
 // --- Room Resolution ---
 
 function resolveRoom(roomMention: string | null): string {
@@ -62,6 +31,12 @@ function resolveRoom(roomMention: string | null): string {
   for (const [name, room] of Object.entries(config.rooms.rooms)) {
     if (name.includes(mention) || mention.includes(name)) return name;
     if (room.aliases.some((a) => a.includes(mention) || mention.includes(a))) return name;
+  }
+
+  // Word-level match (handles duplicated words, extra tokens, or invisible characters)
+  const words = mention.split(/\s+/);
+  for (const [name, room] of Object.entries(config.rooms.rooms)) {
+    if (words.some((w) => w === name || room.aliases.some((a) => a === w))) return name;
   }
 
   return "all";
@@ -182,7 +157,7 @@ export function resolveCommand(
         room,
         ...(expression?.brightness !== undefined && { brightness: expression.brightness }),
         ...(expression?.color_temp_kelvin !== undefined && { color_temp_kelvin: expression.color_temp_kelvin }),
-        ...(expression?.rgb !== undefined && { rgb: snapToPalette(expression.rgb) }),
+        ...(expression?.rgb !== undefined && { rgb: expression.rgb }),
         ...(device_ids && { device_ids }),
       };
     }
@@ -198,7 +173,7 @@ export function resolveCommand(
     }
 
     case "complex": {
-      const rgb = expression?.rgb ? snapToPalette(expression.rgb) : { r: 255, g: 255, b: 255 };
+      const rgb = expression?.rgb ? expression.rgb : { r: 255, g: 255, b: 255 };
       const pattern = expression?.animation_pattern;
 
       if (pattern) {

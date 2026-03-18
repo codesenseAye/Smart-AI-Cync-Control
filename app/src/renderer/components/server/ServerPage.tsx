@@ -7,13 +7,14 @@ interface ServerPageProps {
   statuses: Map<string, ServiceStatusData>;
   logs: LogEntry[];
   logRef: React.RefObject<HTMLPreElement | null>;
+  onClearLogs: () => void;
 }
 
-export function ServerPage({ statuses, logs, logRef }: ServerPageProps) {
+export function ServerPage({ statuses, logs, logRef, onClearLogs }: ServerPageProps) {
   return (
     <div className="container">
       <ServiceStatusPanel statuses={statuses} />
-      <ServerLogs logs={logs} logRef={logRef} />
+      <ServerLogs logs={logs} logRef={logRef} onClear={onClearLogs} />
     </div>
   );
 }

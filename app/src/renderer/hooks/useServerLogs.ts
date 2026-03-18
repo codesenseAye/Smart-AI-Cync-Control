@@ -42,5 +42,9 @@ export function useServerLogs() {
     scrollToBottom();
   }, [logs, scrollToBottom]);
 
-  return { logs, logRef };
+  const clearLogs = useCallback(() => {
+    setLogs([]);
+  }, []);
+
+  return { logs, logRef, clearLogs };
 }

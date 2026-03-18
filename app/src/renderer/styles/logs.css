@@ -5,6 +5,40 @@
   min-height: 0;
 }
 
+.logs-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.logs-toolbar h2 {
+  margin-bottom: 0;
+}
+
+.logs-clear-btn {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 3px 10px;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-xs);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.logs-clear-btn:hover {
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+
+.logs-clear-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+  border-color: var(--border-dim);
+  color: var(--text-dim);
+}
+
 .log-output {
   flex: 1;
   overflow-y: auto;

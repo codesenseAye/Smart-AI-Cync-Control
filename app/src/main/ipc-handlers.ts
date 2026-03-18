@@ -61,10 +61,11 @@ export function registerIpcHandlers(
     }
   });
 
-  // Settings: read rooms.json
+  // Settings: read rooms.json and reload server config
   ipcMain.handle("settings:getRooms", async () => {
     try {
       const raw = readFileSync(DATA_PATHS.roomsJson, "utf-8");
+      await reloadServerRooms(config);
       return { ok: true, data: JSON.parse(raw), path: DATA_PATHS.roomsJson };
     } catch {
       return { ok: false, data: null, path: DATA_PATHS.roomsJson };

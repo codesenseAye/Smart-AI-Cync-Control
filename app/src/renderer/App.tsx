@@ -14,7 +14,7 @@ export function App() {
   const { items, addSentItem, clearItems, removeItem, paused, setPaused } =
     useDeviceEvents(resolveDeviceInfo);
   const statuses = useServiceStatus();
-  const { logs, logRef } = useServerLogs();
+  const { logs, logRef, clearLogs } = useServerLogs();
 
   return (
     <>
@@ -29,7 +29,7 @@ export function App() {
         />
       </div>
       <div className="page" style={{ display: activeTab === "server" ? "block" : "none" }}>
-        <ServerPage statuses={statuses} logs={logs} logRef={logRef} />
+        <ServerPage statuses={statuses} logs={logs} logRef={logRef} onClearLogs={clearLogs} />
       </div>
       <div className="page" style={{ display: activeTab === "settings" ? "block" : "none" }}>
         <SettingsPage />

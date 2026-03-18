@@ -323,13 +323,14 @@ class CyncProxy {
     }
 
     const queueId = conn.queueId;
+    let injected = false;
 
     if (command.effect) {
       const ctrlId = conn.nextCtrlId();
       const pkt = buildEffectCmd(deviceId, command.effect, queueId, ctrlId);
       console.log(`[proxy] INJECT dev:${deviceId} effect=${command.effect}`);
       conn.injectCommand(pkt);
-      return true;
+      injected = true;
     }
 
     if (command.color) {
@@ -337,7 +338,7 @@ class CyncProxy {
       const pkt = buildRGBCmd(deviceId, command.color.r, command.color.g, command.color.b, queueId, ctrlId);
       console.log(`[proxy] INJECT dev:${deviceId} rgb=(${command.color.r},${command.color.g},${command.color.b})`);
       conn.injectCommand(pkt);
-      return true;
+      injected = true;
     }
 
     if (command.color_temp !== undefined) {
@@ -346,7 +347,7 @@ class CyncProxy {
       const pkt = buildTemperatureCmd(deviceId, temp, queueId, ctrlId);
       console.log(`[proxy] INJECT dev:${deviceId} temp=${command.color_temp}K`);
       conn.injectCommand(pkt);
-      return true;
+      injected = true;
     }
 
     if (command.brightness !== undefined) {
@@ -354,18 +355,18 @@ class CyncProxy {
       const pkt = buildBrightnessCmd(deviceId, command.brightness, queueId, ctrlId);
       console.log(`[proxy] INJECT dev:${deviceId} brightness=${command.brightness}%`);
       conn.injectCommand(pkt);
-      return true;
+      injected = true;
     }
 
-    if (command.state !== undefined) {
+    if (command.state !== undefined && !injected) {
       const ctrlId = conn.nextCtrlId();
       const pkt = buildPowerCmd(deviceId, command.state === "ON" ? 1 : 0, queueId, ctrlId);
       console.log(`[proxy] INJECT dev:${deviceId} state=${command.state}`);
       conn.injectCommand(pkt);
-      return true;
+      injected = true;
     }
 
-    return false;
+    return injected;
   }
 
   async stop(): Promise<void> {
